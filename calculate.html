@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 40px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #16a085;
+            margin-top: 25px;
+        }
+        .sheet {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        .note {
+            background-color: #e7f4ff;
+            border-left: 4px solid #3498db;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        .tip {
+            background-color: #e8f8f5;
+            border-left: 4px solid #1abc9c;
+            padding: 10px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>影刀高级课程资料</h1>
+
+    <div class="sheet">
+        <h2>HTML 基础</h2>
+        <div class="note">
+            <p><strong>参考文档：</strong> <a href="https://developer.mozilla.org/zh-CN/docs/Web/HTML" target="_blank">MDN HTML文档</a></p>
+        </div>
+        <ul>
+            <li>在HTML文档中，<code>&lt;html&gt;</code> 是根元素，包含 <code>&lt;head&gt;</code> 和 <code>&lt;body&gt;</code> 两个子元素</li>
+            <li><code>&lt;body&gt;</code> 包含所有可见的页面内容</li>
+            <li><code>&lt;head&gt;</code> 包含页面的元数据</li>
+        </ul>
+        <div class="tip">
+            <p><strong>开发者工具技巧：</strong> 按F12打开开发者工具，点击元素后，按两下左箭头←可以定位到该元素的父元素</p>
+        </div>
+    </div>
+
+    <div class="sheet">
+        <h2>Python 字符串操作</h2>
+        <h3>字符串格式</h3>
+        <table>
+            <tr>
+                <th>分类</th>
+                <th>说明</th>
+                <th>示例</th>
+            </tr>
+            <tr>
+                <td>单引号、双引号</td>
+                <td>用于定义字符串</td>
+                <td><code>'hello'</code>, <code>"world"</code></td>
+            </tr>
+            <tr>
+                <td>引号冲突</td>
+                <td>可通过嵌套不同引号或转义解决</td>
+                <td><code>"He said, 'Hi!'"</code></td>
+            </tr>
+            <tr>
+                <td>三引号</td>
+                <td>支持多行字符串</td>
+                <td><code>'''第一行<br>第二行'''</code></td>
+            </tr>
+        </table>
+
+        <h3>转义字符</h3>
+        <table>
+            <tr>
+                <th>转义字符</th>
+                <th>说明</th>
+                <th>示例</th>
+            </tr>
+            <tr>
+                <td>\</td>
+                <td>转义标识，使特殊字符按字面意义解析</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>\n</td>
+                <td>换行符</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>\\</td>
+                <td>表示反斜杠本身</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>\"</td>
+                <td>表示双引号（在双引号字符串内）</td>
+                <td>-</td>
+            </tr>
+        </table>
+
+        <h3>常用方法</h3>
+        <table>
+            <tr>
+                <th>方法</th>
+                <th>分类</th>
+                <th>说明</th>
+                <th>示例</th>
+            </tr>
+            <tr>
+                <td>+</td>
+                <td>连接</td>
+                <td>拼接字符串</td>
+                <td><code>'a' + 'b' = 'ab'</code></td>
+            </tr>
+            <tr>
+                <td>len</td>
+                <td>长度</td>
+                <td>计算字符串长度</td>
+                <td><code>len('test') = 4</code></td>
+            </tr>
+            <tr>
+                <td>*</td>
+                <td>重复</td>
+                <td>重复字符串</td>
+                <td><code>'a' * 3 = 'aaa'</code></td>
+            </tr>
+            <tr>
+                <td>find</td>
+                <td>查找</td>
+                <td>查找子串位置，找不到返回-1</td>
+                <td><code>'abc'.find('b') = 1</code></td>
+            </tr>
+            <tr>
+                <td>replace</td>
+                <td>替换</td>
+                <td>替换子串</td>
+                <td><code>'abc'.replace('a','x') = 'xbc'</code></td>
+            </tr>
+            <tr>
+                <td>split</td>
+                <td>分割</td>
+                <td>按分隔符分割字符串为列表</td>
+                <td><code>'a,b,c'.split(',') = ['a','b','c']</code></td>
+            </tr>
+            <tr>
+                <td>strip</td>
+                <td>去除空白字符</td>
+                <td>去除首尾空白</td>
+                <td><code>' abc '.strip() = 'abc'</code></td>
+            </tr>
+            <tr>
+                <td>format</td>
+                <td>格式化</td>
+                <td>格式化字符串</td>
+                <td><code>'{} is {}'.format('Tom',18)</code></td>
+            </tr>
+        </table>
+
+        <h3>Python 数据类型</h3>
+        <table>
+            <tr>
+                <th>大类</th>
+                <th>具体类型</th>
+                <th>语法/示例</th>
+            </tr>
+            <tr>
+                <td>文本</td>
+                <td>字符串（str）</td>
+                <td><code>x = "Hello World"</code></td>
+            </tr>
+            <tr>
+                <td>数值</td>
+                <td>整数（int）</td>
+                <td><code>x = 29</code></td>
+            </tr>
+            <tr>
+                <td>数值</td>
+                <td>浮点数（float）</td>
+                <td><code>x = 29.5</code></td>
+            </tr>
+            <tr>
+                <td>序列</td>
+                <td>列表（list）</td>
+                <td><code>x = ["apple", "banana", "cherry"]</code></td>
+            </tr>
+            <tr>
+                <td>映射</td>
+                <td>字典（dict）</td>
+                <td><code>x = {"name": "Bill", "age": 63}</code></td>
+            </tr>
+            <tr>
+                <td>集合</td>
+                <td>集合（set）</td>
+                <td><code>x = {"apple", "banana", "cherry"}</code></td>
+            </tr>
+        </table>
+
+        <h3>列表操作方法</h3>
+        <table>
+            <tr>
+                <th>方法</th>
+                <th>功能说明</th>
+                <th>示例代码</th>
+            </tr>
+            <tr>
+                <td>append()</td>
+                <td>在末尾添加一个元素</td>
+                <td><code>my_list = [1, 2, 3]<br>my_list.append(4)<br>print(my_list)  # 输出: [1, 2, 3, 4]</code></td>
+            </tr>
+            <tr>
+                <td>insert()</td>
+                <td>在指定位置插入一个元素</td>
+                <td><code>my_list = [1, 2, 3]<br>my_list.insert(1, 10)<br>print(my_list)  # 输出: [1, 10, 2, 3]</code></td>
+            </tr>
+            <tr>
+                <td>pop()</td>
+                <td>删除并返回指定位置的元素</td>
+                <td><code>x = [1, 2, 3]<br>y = x.pop()<br>print(x)  # 输出: [1, 2]<br>print(y)  # 输出: 3</code></td>
+            </tr>
+            <tr>
+                <td>sort()</td>
+                <td>原地排序，默认升序</td>
+                <td><code>my_list = [3, 1, 2]<br>my_list.sort()<br>print(my_list)  # 输出: [1, 2, 3]</code></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="sheet">
+        <h2>编码版使用指南</h2>
+        <h3>为什么要用编码版？</h3>
+        <ul>
+            <li>实现影刀暂不支持的功能</li>
+            <li>已经有大量的自动化脚本</li>
+            <li>IT 喜欢敲代码</li>
+        </ul>
+
+        <h3>编码版功能</h3>
+        <ul>
+            <li>左侧是影刀开放的指令接口：扩展指令、package、xbot</li>
+            <li>接口说明文档可以直接查看或跳转到帮助中心</li>
+        </ul>
+
+        <div class="note">
+            <h4>重要注意事项</h4>
+            <ol>
+                <li>编码版调用的是自定义指令</li>
+                <li>自定义指令必须发版才能在市场找到，且每次更新都得发版一次，然后在市场更新一次</li>
+                <li>自定义指令的主流程对应main，子流程对应一系列process，这里要在子流程里写</li>
+                <li>自定义指令如果需要输入与输出，必须在下方的流程参数里新建参数，然后在流程中引用</li>
+                <li>自定义指令界面右侧的眼睛可以禁用流程，如果要在编码版中使用某一流程，就不要在此处禁用它</li>
+            </ol>
+        </div>
+
+        <h3>可视化衔接</h3>
+        <table>
+            <tr>
+                <th>功能</th>
+                <th>说明</th>
+            </tr>
+            <tr>
+                <td>调用流程</td>
+                <td>只执行 main 函数</td>
+            </tr>
+            <tr>
+                <td>调用模块</td>
+                <td>传参和返回值</td>
+            </tr>
+            <tr>
+                <td>插入代码段</td>
+                <td>普通变量 - 点亮 python 模式；手写</td>
+            </tr>
+            <tr>
+                <td>导入包</td>
+                <td>from . import demo</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="sheet">
+        <h2>API 调度</h2>
+        <h3>HTTP 请求流程</h3>
+        <table>
+            <tr>
+                <th>分类</th>
+                <th>拆解</th>
+                <th>说明</th>
+            </tr>
+            <tr>
+                <td>HTTP 请求流程</td>
+                <td>客户端行为</td>
+                <td>客户端向服务器发送请求</td>
+            </tr>
+            <tr>
+                <td>HTTP 请求流程</td>
+                <td>服务器响应</td>
+                <td>服务器返回对应数据（如 HTML 文档、JSON 数据）</td>
+            </tr>
+        </table>
+
+        <h3>HTTP 请求构成</h3>
+        <table>
+            <tr>
+                <th>部分</th>
+                <th>说明</th>
+                <th>示例/特点</th>
+            </tr>
+            <tr>
+                <td>请求行 - 方法</td>
+                <td>GET、POST 等</td>
+                <td>GET 特点：查询数据<br>POST 特点：提交数据</td>
+            </tr>
+            <tr>
+                <td>请求头 - 认证信息</td>
+                <td>Authorization（鉴权字段）</td>
+                <td>用于校验接口权限</td>
+            </tr>
+            <tr>
+                <td>请求体</td>
+                <td>主要用于 POST 请求</td>
+                <td>支持格式：JSON、表单数据</td>
+            </tr>
+        </table>
+
+        <h3>影刀 API 特点</h3>
+        <ul>
+            <li>数据格式统一：发送/返回均为 JSON 格式</li>
+            <li>流程简化：比浏览器请求更简洁，专注 API 交互</li>
+        </ul>
+    </div>
+
+    <div class="sheet">
+        <h2>JavaScript 函数参数引号规则</h2>
+        <table>
+            <tr>
+                <th>参数类型</th>
+                <th>是否需要引号</th>
+                <th>示例（正确写法）</th>
+                <th>错误示例及原因</th>
+            </tr>
+            <tr>
+                <td>字符串（文本）</td>
+                <td>必须加单/双引号</td>
+                <td><code>alert("你好！")</code><br><code>console.log('123')</code></td>
+                <td><code>alert(你好)</code> → 报错：变量未定义</td>
+            </tr>
+            <tr>
+                <td>数字（Number）</td>
+                <td>不加引号</td>
+                <td><code>const num = 100</code><br><code>Math.max(5, 10)</code></td>
+                <td><code>Math.max("5", "10")</code> → 按字符串比较而非数字</td>
+            </tr>
+            <tr>
+                <td>布尔值（Boolean）</td>
+                <td>不加引号</td>
+                <td><code>let isOk = true</code><br><code>if (false) { ... }</code></td>
+                <td><code>if ("true") { ... }</code> → 字符串 "true" 为真，逻辑错误</td>
+            </tr>
+            <tr>
+                <td>变量/对象/函数</td>
+                <td>不加引号</td>
+                <td><code>const user = { name: "A" };</code><br><code>console.log(user)</code></td>
+                <td><code>console.log('user')</code> → 输出字符串 'user' 而非变量</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
