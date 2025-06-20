@@ -1,9 +1,11 @@
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空运成本计算器（修正版）</title>
+    <title>空运成本计算器（五五分泡版）</title>
     <style>
+        
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
             line-height: 1.6;
@@ -86,11 +88,7 @@
     </style>
 </head>
 <body>
-    <h1>空运成本计算器（修正版）</h1>
-    
-    <div class="note">
-        <p><strong>泡货5/5分泡计算说明：</strong> 已修正比例和USD/KG计算公式。</p>
-    </div>
+    <h1>空运成本计算器（五五分泡版）</h1>
     
     <div class="calculator">
         <div class="section-title">基础参数</div>
@@ -98,21 +96,19 @@
             <tr>
                 <td>体积 (m³)</td>
                 <td><input type="number" id="volume" step="0.001" placeholder="输入体积"></td>
-                <td class="formula">Excel公式: =E3/0.006</td>
                 <td>C.W. (计费重量, kg)</td>
                 <td class="result" id="cw">-</td>
             </tr>
             <tr>
                 <td>G.W. (实际重量, kg)</td>
                 <td><input type="number" id="gw" step="0.001" placeholder="输入实际重量"></td>
-                <td class="formula">修正公式: =B4/E3 → GW/体积</td>
                 <td>比例</td>
                 <td class="result" id="ratio">-</td>
             </tr>
             <tr>
                 <td>USD/RMB汇率</td>
                 <td><input type="number" id="exchangeRate" step="0.0001" value="7.2" placeholder="输入汇率"></td>
-                <td class="formula">Excel单元格: E5</td>
+                
                 <td>成本计费重 (kg)</td>
                 <td class="result" id="costWeight">-</td>
             </tr>
@@ -123,14 +119,14 @@
             <tr>
                 <td>成本空运费RMB/KG</td>
                 <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入RMB单价"></td>
-                <td class="formula">Excel公式: =B9/B3</td>
+                
                 <td>分泡后RMB/KG</td>
                 <td class="result" id="rmbAfter">-</td>
             </tr>
             <tr>
     <td>成本空运费USD/KG</td>
     <td class="result" id="usdPerKg">-</td>
-    <td class="formula">修正公式: =B7/E5 → RMB/KG÷汇率</td>
+   
     <td>分泡后USD/KG</td>
     <td class="result" id="usdAfter">-</td>
 </tr>
@@ -140,13 +136,13 @@
         <table>
             <tr>
                 <td colspan="2"></td>
-                <td class="formula">Excel公式: =B5*B7</td>
+                
                 <td>空运总成本RMB</td>
                 <td class="result" id="totalRMB">-</td>
             </tr>
             <tr>
                 <td colspan="2"></td>
-                <td class="formula">Excel公式: =B5*B8</td>
+                
                 <td>空运总成本USD</td>
                 <td class="result" id="totalUSD">-</td>
             </tr>
@@ -154,19 +150,7 @@
         
         <button onclick="calculate()">计算所有结果</button>
         
-        <div class="note">
-            <p><strong>修正后的完整公式：</strong></p>
-            <ul>
-                <li><strong>C.W.</strong> (B3单元格): =E3/0.006 → 体积/0.006</li>
-                <li><strong>比例</strong> (D4单元格): =B4/E3 → G.W./体积 (已修正)</li>
-                <li><strong>成本计费重</strong> (B5单元格): =(B3-B4)/2+B4 → (C.W.-G.W.)/2 + G.W.</li>
-                <li><strong>分泡后RMB/KG</strong> (D9单元格): =B9/B3 → 成本空运费RMB/KG / C.W.</li>
-                <li><strong>成本空运费USD/KG</strong> (B8单元格): =B7/E5 → 成本空运费RMB/KG / 汇率 (已修正)</li>
-                <li><strong>分泡后USD/KG</strong> (D10单元格): =B10/B3 → 成本空运费USD/KG / C.W.</li>
-                <li><strong>空运总成本RMB</strong> (B11单元格): =B5*B7 → 成本计费重 × 成本空运费RMB/KG</li>
-                <li><strong>空运总成本USD</strong> (B12单元格): =B5*B8 → 成本计费重 × 成本空运费USD/KG</li>
-            </ul>
-        </div>
+       
     </div>
 
     <script>
