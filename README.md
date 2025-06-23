@@ -87,7 +87,7 @@
     </style>
 </head>
 <body>
-    <h1>空运成本计算器（五五分泡版）</h1>
+    <h1>空运成本计算器（阿洁专用版）</h1>
     
     <div class="calculator">
         <div class="section-title">基础参数</div>
