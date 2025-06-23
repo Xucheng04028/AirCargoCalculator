@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空运成本计算器（五五分泡版）</title>
+    <title>空运成本计算器（阿洁专用板）</title>
     <style>
         
         body {
