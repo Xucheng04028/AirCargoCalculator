@@ -1,4 +1,7 @@
-{"name":"","short_name":"","icons": [
+{
+  "name": "空运成本计算器",
+  "short_name": "空运计算器",
+  "icons": [
     {
       "src": "favicon-32x32.png",
       "sizes": "32x32",
