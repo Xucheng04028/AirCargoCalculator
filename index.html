@@ -5,19 +5,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="manifest" href="site.webmanifest">
     <link rel="icon" href="favicon.ico" type="image/x-icon"> 
-
-    <a href="https://www.track-trace.com/" target="_blank" style="
-  display: inline-block;
-  padding: 10px 20px;
-  background: #0066cc;
-  color: white;
-  text-decoration: none;
-  border-radius: 5px;">
-  <i class="fa fa-truck"></i> 物流跟踪查询
-    </a>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空运成本计算器（阿洁专用版）</title>
+    <title>空运成本计算器（阿洁专用板）</title>
     <style>
         
         body {
@@ -57,7 +48,7 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -99,6 +90,30 @@
             color: #16a085;
             margin: 20px 0 10px 0;
         }
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .option-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .option-group input[type="radio"] {
+            width: auto;
+        }
+        .option-group label:hover {
+            background-color: #f0f7ff;
+        }
+        .option-group input[type="radio"]:checked + span {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -109,40 +124,76 @@
         <table>
             <tr>
                 <td>体积 (m³)</td>
-                <td><input type="number" id="volume1" step="0.001" placeholder="输入体积"></td>
+                <td><input type="number" id="volume" step="0.001" placeholder="输入体积"></td>
                 <td>C.W. (计费重量, kg)</td>
-                <td class="result" id="cw1">-</td>
+                <td class="result" id="cw">-</td>
             </tr>
             <tr>
                 <td>G.W. (实际重量, kg)</td>
-                <td><input type="number" id="gw1" step="0.001" placeholder="输入实际重量"></td>
+                <td><input type="number" id="gw" step="0.001" placeholder="输入实际重量"></td>
                 <td>比例</td>
-                <td class="result" id="ratio1">-</td>
+                <td class="result" id="ratio">-</td>
             </tr>
             <tr>
                 <td>USD/RMB汇率</td>
-                <td><input type="number" id="exchangeRate1" step="0.0001" value="7.2" placeholder="输入汇率"></td>
+                <td><input type="number" id="exchangeRate" step="0.0001" value="7.2" placeholder="输入汇率"></td>
                 
                 <td>成本计费重 (kg)</td>
-                <td class="result" id="costWeight1">-</td>
+                <td class="result" id="costWeight">-</td>
             </tr>
         </table>
+
+        <div class="section-title">计费标准选择</div>
+        <div class="option-group">
+            <label>
+                <input type="radio" name="billingStandard" value="0.006" checked>
+                <span>大陆</span>
+            </label>
+            <label>
+                <input type="radio" name="billingStandard" value="0.007">
+                <span>香港</span>
+            </label>
+        </div>
+
+        <div class="section-title">分泡比例选择</div>
+        <div class="option-group">
+            <label>
+                <input type="radio" name="泡率" value="0" checked>
+                <span>不分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.2">
+                <span>28分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.3">
+                <span>37分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.4">
+                <span>46分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.5">
+                <span>55分</span>
+            </label>
+        </div>
 
         <div class="section-title">成本计算</div>
         <table>
             <tr>
                 <td>成本空运费RMB/KG</td>
-                <td><input type="number" id="rmbPerKg1" step="0.01" placeholder="输入RMB单价"></td>
+                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入RMB单价"></td>
                 
                 <td>分泡后RMB/KG</td>
-                <td class="result" id="rmbAfter1">-</td>
+                <td class="result" id="rmbAfter">-</td>
             </tr>
             <tr>
                 <td>成本空运费USD/KG</td>
-                <td class="result" id="usdPerKg1">-</td>
+                <td class="result" id="usdPerKg">-</td>
                
                 <td>分泡后USD/KG</td>
-                <td class="result" id="usdAfter1">-</td>
+                <td class="result" id="usdAfter">-</td>
             </tr>
         </table>
 
@@ -152,155 +203,71 @@
                 <td colspan="2"></td>
                 
                 <td>空运总成本RMB</td>
-                <td class="result" id="totalRMB1">-</td>
+                <td class="result" id="totalRMB">-</td>
             </tr>
             <tr>
                 <td colspan="2"></td>
                 
                 <td>空运总成本USD</td>
-                <td class="result" id="totalUSD1">-</td>
+                <td class="result" id="totalUSD">-</td>
             </tr>
         </table>
         
-        <button onclick="calculate1()">计算所有结果</button>
-    </div>
-
-    <h1>空运成本计算器（全吃泡版）</h1>
-    
-    <div class="calculator">
-        <div class="section-title">基础参数</div>
-        <table>
-            <tr>
-                <td>体积 (m³)</td>
-                <td><input type="number" id="volume2" step="0.001" placeholder="输入体积"></td>
-                <td>C.W. (计费重量, kg)</td>
-                <td class="result" id="cw2">-</td>
-            </tr>
-            <tr>
-                <td>G.W. (实际重量, kg)</td>
-                <td><input type="number" id="gw2" step="0.001" placeholder="输入实际重量"></td>
-                <td>比例</td>
-                <td class="result" id="ratio2">-</td>
-            </tr>
-            <tr>
-                <td>USD/RMB汇率</td>
-                <td><input type="number" id="exchangeRate2" step="0.0001" value="7.2" placeholder="输入汇率"></td>
-                
-                <td>成本计费重 (kg)</td>
-                <td class="result" id="costWeight2">-</td>
-            </tr>
-        </table>
-
-        <div class="section-title">成本计算</div>
-        <table>
-            <tr>
-                <td>成本空运费RMB/KG</td>
-                <td><input type="number" id="rmbPerKg2" step="0.01" placeholder="输入RMB单价"></td>
-                
-                <td>分泡后RMB/KG</td>
-                <td class="result" id="rmbAfter2">-</td>
-            </tr>
-            <tr>
-                <td>成本空运费USD/KG</td>
-                <td class="result" id="usdPerKg2">-</td>
-               
-                <td>分泡后USD/KG</td>
-                <td class="result" id="usdAfter2">-</td>
-            </tr>
-        </table>
-
-        <div class="section-title">总成本</div>
-        <table>
-            <tr>
-                <td colspan="2"></td>
-                
-                <td>空运总成本RMB</td>
-                <td class="result" id="totalRMB2">-</td>
-            </tr>
-            <tr>
-                <td colspan="2"></td>
-                
-                <td>空运总成本USD</td>
-                <td class="result" id="totalUSD2">-</td>
-            </tr>
-        </table>
+        <button onclick="calculate()">计算所有结果</button>
         
-        <button onclick="calculate2()">计算所有结果</button>
+       
     </div>
 
     <script>
-    // 第一个计算器（阿洁专用版）
-    function calculate1() {
-        try {
-            const volume = parseFloat(document.getElementById('volume1').value) || 0;
-            const gw = parseFloat(document.getElementById('gw1').value) || 0;
-            const exchangeRate = parseFloat(document.getElementById('exchangeRate1').value) || 7.2;
-            const rmbPerKg = parseFloat(document.getElementById('rmbPerKg1').value) || 0;
+    function calculate() {
+    try {
+        // 获取输入值
+        const volume = parseFloat(document.getElementById('volume').value) || 0;
+        const gw = parseFloat(document.getElementById('gw').value) || 0;
+        const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
+        const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
 
-            const cw = volume / 0.006;
-            document.getElementById('cw1').textContent = cw.toFixed(2);
+        // 获取选中的计费标准
+        const billingStandard = parseFloat(document.querySelector('input[name="billingStandard"]:checked').value) || 0.006;
+        
+        // 获取选中的分泡比例
+        const selectedRatio = document.querySelector('input[name="泡率"]:checked').value;
+        const bubbleRatio = parseFloat(selectedRatio) || 0;
 
-            const ratio = volume > 0 ? gw / volume : 0;
-            document.getElementById('ratio1').textContent = ratio.toFixed(4);
+        // 计算C.W. (计费重量) - 根据所选标准使用不同的除数
+        const cw = volume / billingStandard;
+        document.getElementById('cw').textContent = cw.toFixed(2);
 
-            const costWeight = (cw - gw) / 2 + gw;
-            document.getElementById('costWeight1').textContent = costWeight.toFixed(2);
+        // 计算比例 (GW/体积)
+        const ratio = volume > 0 ? gw / volume : 0;
+        document.getElementById('ratio').textContent = ratio.toFixed(4);
 
-            const costUsdPerKg = exchangeRate > 0 ? rmbPerKg / exchangeRate : 0;
-            document.getElementById('usdPerKg1').textContent = costUsdPerKg.toFixed(4);
+        // 计算成本计费重 (分泡后重量)
+        // 公式: 实际重量 + (计费重量 - 实际重量) × 分泡比例
+        const costWeight = gw + (cw - gw) * bubbleRatio;
+        document.getElementById('costWeight').textContent = costWeight.toFixed(2);
 
-            const totalRMB = costWeight * rmbPerKg;
-            const totalUSD = costWeight * costUsdPerKg;
-            document.getElementById('totalRMB1').textContent = totalRMB.toFixed(2);
-            document.getElementById('totalUSD1').textContent = totalUSD.toFixed(2);
+        // 计算成本空运费USD/KG (RMB/KG ÷ 汇率)
+        const costUsdPerKg = exchangeRate > 0 ? rmbPerKg / exchangeRate : 0;
+        document.getElementById('usdPerKg').textContent = costUsdPerKg.toFixed(4);
 
-            const rmbAfter = cw > 0 ? totalRMB / cw : 0;
-            document.getElementById('rmbAfter1').textContent = rmbAfter.toFixed(4);
+        // 计算总成本
+        const totalRMB = costWeight * rmbPerKg;
+        const totalUSD = costWeight * costUsdPerKg;
+        document.getElementById('totalRMB').textContent = totalRMB.toFixed(2);
+        document.getElementById('totalUSD').textContent = totalUSD.toFixed(2);
 
-            const usdAfter = cw > 0 ? totalUSD / cw : 0;
-            document.getElementById('usdAfter1').textContent = usdAfter.toFixed(4);
+        // 计算分泡后单价
+        const rmbAfter = cw > 0 ? totalRMB / cw : 0;
+        document.getElementById('rmbAfter').textContent = rmbAfter.toFixed(4);
 
-        } catch (e) {
-            alert("计算错误: " + e.message);
-        }
+        const usdAfter = cw > 0 ? totalUSD / cw : 0;
+        document.getElementById('usdAfter').textContent = usdAfter.toFixed(4);
+
+    } catch (e) {
+        alert("计算错误: " + e.message);
     }
-
-    // 第二个计算器（全吃泡版）
-    function calculate2() {
-        try {
-            const volume = parseFloat(document.getElementById('volume2').value) || 0;
-            const gw = parseFloat(document.getElementById('gw2').value) || 0;
-            const exchangeRate = parseFloat(document.getElementById('exchangeRate2').value) || 7.2;
-            const rmbPerKg = parseFloat(document.getElementById('rmbPerKg2').value) || 0;
-
-            const cw = volume / 0.006;
-            document.getElementById('cw2').textContent = cw.toFixed(2);
-
-            const ratio = volume > 0 ? gw / volume : 0;
-            document.getElementById('ratio2').textContent = ratio.toFixed(4);
-
-            // 全吃泡版特殊计算：成本计费重 = 实际重量
-            const costWeight = gw;
-            document.getElementById('costWeight2').textContent = costWeight.toFixed(2);
-
-            const costUsdPerKg = exchangeRate > 0 ? rmbPerKg / exchangeRate : 0;
-            document.getElementById('usdPerKg2').textContent = costUsdPerKg.toFixed(4);
-
-            const totalRMB = costWeight * rmbPerKg;
-            const totalUSD = costWeight * costUsdPerKg;
-            document.getElementById('totalRMB2').textContent = totalRMB.toFixed(2);
-            document.getElementById('totalUSD2').textContent = totalUSD.toFixed(2);
-
-            const rmbAfter = cw > 0 ? totalRMB / cw : 0;
-            document.getElementById('rmbAfter2').textContent = rmbAfter.toFixed(4);
-
-            const usdAfter = cw > 0 ? totalUSD / cw : 0;
-            document.getElementById('usdAfter2').textContent = usdAfter.toFixed(4);
-
-        } catch (e) {
-            alert("计算错误: " + e.message);
-        }
-    }
-    </script>
+}
+</script>
 </body>
 </html>
