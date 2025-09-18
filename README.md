@@ -8,7 +8,7 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空运成本计算器（阿洁专用板）</title>
+    <title>空运成本计算器（徐城升级版）</title>
     <style>
         
         body {
@@ -48,7 +48,7 @@
             background-color: #f2f2f2;
             font-weight: bold;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -90,10 +90,34 @@
             color: #16a085;
             margin: 20px 0 10px 0;
         }
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .option-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .option-group input[type="radio"] {
+            width: auto;
+        }
+        .option-group label:hover {
+            background-color: #f0f7ff;
+        }
+        .option-group input[type="radio"]:checked + span {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>空运成本计算器（阿洁专用版）</h1>
+    <h1>空运成本计算器（徐城升级版）</h1>
     
     <div class="calculator">
         <div class="section-title">基础参数</div>
@@ -119,6 +143,42 @@
             </tr>
         </table>
 
+        <div class="section-title">计费标准选择</div>
+        <div class="option-group">
+            <label>
+                <input type="radio" name="billingStandard" value="0.006" checked>
+                <span>大陆</span>
+            </label>
+            <label>
+                <input type="radio" name="billingStandard" value="0.007">
+                <span>香港</span>
+            </label>
+        </div>
+
+        <div class="section-title">分泡比例选择</div>
+        <div class="option-group">
+            <label>
+                <input type="radio" name="泡率" value="0" checked>
+                <span>不分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.2">
+                <span>28分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.3">
+                <span>37分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.4">
+                <span>46分</span>
+            </label>
+            <label>
+                <input type="radio" name="泡率" value="0.5">
+                <span>55分</span>
+            </label>
+        </div>
+
         <div class="section-title">成本计算</div>
         <table>
             <tr>
@@ -129,12 +189,12 @@
                 <td class="result" id="rmbAfter">-</td>
             </tr>
             <tr>
-    <td>成本空运费USD/KG</td>
-    <td class="result" id="usdPerKg">-</td>
-   
-    <td>分泡后USD/KG</td>
-    <td class="result" id="usdAfter">-</td>
-</tr>
+                <td>成本空运费USD/KG</td>
+                <td class="result" id="usdPerKg">-</td>
+               
+                <td>分泡后USD/KG</td>
+                <td class="result" id="usdAfter">-</td>
+            </tr>
         </table>
 
         <div class="section-title">总成本</div>
@@ -167,8 +227,15 @@
         const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
         const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
 
-        // 计算C.W. (计费重量)
-        const cw = volume / 0.006;
+        // 获取选中的计费标准
+        const billingStandard = parseFloat(document.querySelector('input[name="billingStandard"]:checked').value) || 0.006;
+        
+        // 获取选中的分泡比例
+        const selectedRatio = document.querySelector('input[name="泡率"]:checked').value;
+        const bubbleRatio = parseFloat(selectedRatio) || 0;
+
+        // 计算C.W. (计费重量) - 根据所选标准使用不同的除数
+        const cw = volume / billingStandard;
         document.getElementById('cw').textContent = cw.toFixed(2);
 
         // 计算比例 (GW/体积)
@@ -176,7 +243,8 @@
         document.getElementById('ratio').textContent = ratio.toFixed(4);
 
         // 计算成本计费重 (分泡后重量)
-        const costWeight = (cw - gw) / 2 + gw;
+        // 公式: 实际重量 + (计费重量 - 实际重量) × 分泡比例
+        const costWeight = gw + (cw - gw) * bubbleRatio;
         document.getElementById('costWeight').textContent = costWeight.toFixed(2);
 
         // 计算成本空运费USD/KG (RMB/KG ÷ 汇率)
@@ -189,12 +257,10 @@
         document.getElementById('totalRMB').textContent = totalRMB.toFixed(2);
         document.getElementById('totalUSD').textContent = totalUSD.toFixed(2);
 
-        // === 修正分泡后单价公式 ===
-        // 分泡后RMB/KG = 总空运成本RMB / C.W.
+        // 计算分泡后单价
         const rmbAfter = cw > 0 ? totalRMB / cw : 0;
         document.getElementById('rmbAfter').textContent = rmbAfter.toFixed(4);
 
-        // 分泡后USD/KG = 总空运成本USD / C.W.
         const usdAfter = cw > 0 ? totalUSD / cw : 0;
         document.getElementById('usdAfter').textContent = usdAfter.toFixed(4);
 
