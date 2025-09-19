@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -11,7 +12,7 @@
             padding: 0;
         }
         html {
-            font-size: clamp(12px, 3vw, 16px); /* 响应式基准字体，替代媒体查询 */
+            font-size: clamp(12px, 3vw, 16px); /* 响应式基准字体 */
             -webkit-text-size-adjust: 100% !important;
         }
         body {
@@ -43,8 +44,15 @@
             color: #16a085;
             margin: 1.2rem 0 0.6rem;
             font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        /* 表格与输入框样式精简 */
+        .section-title::before {
+            content: "•";
+            color: #3498db; /* 小标题前添加点标记，增强视觉层次 */
+        }
+        /* 表格与输入框样式优化 */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -57,6 +65,7 @@
         }
         th {
             background: #f2f2f2;
+            white-space: nowrap; /* 表头文字不换行 */
         }
         input {
             width: 100%;
@@ -64,8 +73,38 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 1rem;
+            transition: border-color 0.3s; /* 输入框聚焦动画 */
         }
-        /* 选项组与按钮样式合并 */
+        input:focus {
+            border-color: #3498db; /* 聚焦时边框变蓝，提示当前输入状态 */
+            outline: none;
+        }
+        input:invalid:not(:placeholder-shown) {
+            border-color: #e74c3c; /* 输入无效值时边框变红 */
+        }
+        /* 体积计算专用样式 */
+        .volume-calculator {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .volume-calculator input {
+            flex: 1;
+            min-width: 80px;
+        }
+        .volume-calculator button {
+            padding: 0.6rem;
+            font-size: 1rem;
+            margin-top: 0;
+            white-space: nowrap;
+        }
+        .dimension-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+        /* 选项组与按钮样式增强 */
         .option-group {
             display: flex;
             flex-wrap: wrap;
@@ -81,6 +120,14 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .option-group input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: #3498db; /* 选中项文字变蓝，更明显 */
+        }
+        .option-group label:hover {
+            background: #f0f7ff; /* 悬停时浅蓝背景，增强交互感 */
         }
         .option-group input[type="radio"] {
             width: auto;
@@ -95,18 +142,33 @@
             font-size: 1.1rem;
             margin-top: 0.8rem;
             width: 100%;
+            transition: background 0.3s, transform 0.1s;
         }
         button:hover {
             background: #2980b9;
         }
-        /* 结果样式与隐藏类保留 */
+        button:active {
+            transform: scale(0.99); /* 点击时轻微缩小，增强反馈 */
+        }
+        /* 结果样式强化 */
         .result {
             font-weight: bold;
             color: #2980b9;
-            background: #f8f9fa;
+            background: #f0f7ff; /* 结果区背景色加深，与输入区区分更明显 */
+            transition: background 0.3s;
+        }
+        .result:hover {
+            background: #e7f0ff; /* 悬停结果区时背景变化，提示可复制 */
         }
         .hidden {
             display: none;
+        }
+        /* 错误提示样式 */
+        .error-hint {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin: 0.3rem 0 0.8rem;
+            height: 1.2rem; /* 固定高度，避免布局跳动 */
         }
     </style>
 </head>
@@ -115,22 +177,33 @@
     <div class="calculator">
         <!-- 基础参数 -->
         <div class="section-title">基础参数</div>
+        <div class="error-hint" id="baseError"></div> <!-- 错误提示区 -->
         <table>
             <tr>
                 <td>体积 (m³)</td>
-                <td><input type="number" id="volume" step="0.001" placeholder="输入体积"></td>
+                <td>
+                    <input type="number" id="volume" step="0.001" placeholder="输入体积" min="0" required>
+                    <!-- 新增体积计算功能：输入长宽高(mm)自动计算体积(m³) -->
+                    <div class="dimension-label">或输入尺寸(mm)计算体积：</div>
+                    <div class="volume-calculator">
+                        <input type="number" id="length" step="1" placeholder="长" min="0">
+                        <input type="number" id="width" step="1" placeholder="宽" min="0">
+                        <input type="number" id="height" step="1" placeholder="高" min="0">
+                        <button type="button" onclick="calculateVolume()">计算体积</button>
+                    </div>
+                </td>
                 <td>C.W. (计费重量, kg)</td>
                 <td class="result" id="cw">-</td>
             </tr>
             <tr>
                 <td>G.W. (实际重量, kg)</td>
-                <td><input type="number" id="gw" step="0.001" placeholder="输入实际重量"></td>
+                <td><input type="number" id="gw" step="0.001" placeholder="输入实际重量" min="0" required></td>
                 <td>比例</td>
                 <td class="result" id="ratio">-</td>
             </tr>
             <tr>
                 <td>USD/RMB汇率</td>
-                <td><input type="number" id="exchangeRate" step="0.0001" value="7.2"></td>
+                <td><input type="number" id="exchangeRate" step="0.0001" value="7.2" min="0.0001" required></td>
                 <td>成本计费重 (kg)</td>
                 <td class="result" id="costWeight">-</td>
             </tr>
@@ -163,7 +236,7 @@
         <table>
             <tr>
                 <td>成本空运费RMB/KG</td>
-                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价"></td>
+                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价" min="0" required></td>
                 <td>分泡后RMB/KG</td>
                 <td class="result" id="rmbAfter">-</td>
             </tr>
@@ -194,47 +267,101 @@
     </div>
 
     <script>
-        // 简化事件监听：计费标准切换
+        // 新增：体积计算函数（mm转m³）
+        function calculateVolume() {
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            
+            // 验证输入
+            if (length <= 0 || width <= 0 || height <= 0) {
+                document.getElementById('baseError').textContent = "提示：长宽高必须为正数";
+                return;
+            }
+            
+            // 计算体积：1m³ = 1e9 mm³ (1000×1000×1000)
+            const volume = (length * width * height) / 1000000000;
+            
+            // 填入体积输入框并保留6位小数（适合小体积）
+            document.getElementById('volume').value = volume.toFixed(6);
+            
+            // 清空错误提示并触发计算
+            document.getElementById('baseError').textContent = "";
+            calc();
+        }
+
+        // 初始化：给所有输入和选择框添加实时计算触发
+        const inputElements = document.querySelectorAll('input');
+        inputElements.forEach(el => {
+            // 输入变化、失去焦点时自动计算（除了radio，避免频繁触发）
+            if (el.type !== 'radio') {
+                el.addEventListener('input', debounce(calc, 300)); // 防抖：300ms内只算一次
+                el.addEventListener('blur', calc);
+            } else {
+                el.addEventListener('change', calc); // 单选框变化时立即计算
+            }
+        });
+
+        // 计费标准切换逻辑
         document.querySelectorAll('input[name="billing"]').forEach(radio => {
-            radio.onchange = () => {
+            radio.addEventListener('change', () => {
                 const isMainland = radio.value === "0.006";
                 document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
                 document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
-            };
+            });
         });
 
-        // 精简计算函数
+        // 防抖函数：避免输入时频繁计算
+        function debounce(func, delay) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // 核心计算函数
         function calc() {
             try {
-                // 获取基础参数
-                const volume = +document.getElementById('volume').value || 0;
-                const gw = +document.getElementById('gw').value || 0;
-                const rate = +document.getElementById('exchangeRate').value || 7.2;
-                const rmbKg = +document.getElementById('rmbPerKg').value || 0;
+                // 获取基础参数并验证
+                const volume = parseFloat(document.getElementById('volume').value) || 0;
+                const gw = parseFloat(document.getElementById('gw').value) || 0;
+                const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
+                const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
                 
+                // 输入验证：提示无效值
+                const errorHint = document.getElementById('baseError');
+                if (volume < 0 || gw < 0 || rate <= 0 || rmbPerKg < 0) {
+                    errorHint.textContent = "提示：体积、重量、汇率不能为负数，汇率必须大于0";
+                    return; // 验证失败不计算
+                } else {
+                    errorHint.textContent = ""; // 清空错误提示
+                }
+
                 // 获取计费标准和分泡比例
                 const billing = +document.querySelector('input[name="billing"]:checked').value;
                 const bubble = billing === 0.006 
                     ? +document.querySelector('input[name="bubble"]:checked').value 
                     : +document.querySelector('input[name="bubbleHk"]:checked').value;
 
-                // 核心计算（合并步骤，减少变量）
+                // 核心计算
                 const cw = volume / billing;
                 const costWeight = gw + (cw - gw) * bubble;
-                const usdKg = (rmbKg / rate).toFixed(4);
-                const totalRMB = (costWeight * rmbKg).toFixed(2);
+                const usdPerKg = (rmbPerKg / rate).toFixed(4);
+                const totalRMB = (costWeight * rmbPerKg).toFixed(2);
 
-                // 赋值结果（精简DOM操作）
-                document.getElementById('cw').textContent = cw.toFixed(2);
-                document.getElementById('ratio').textContent = (gw / volume || 0).toFixed(4);
-                document.getElementById('costWeight').textContent = costWeight.toFixed(2);
-                document.getElementById('usdPerKg').textContent = usdKg;
-                document.getElementById('totalRMB').textContent = totalRMB;
-                document.getElementById('totalUSD').textContent = (costWeight * usdKg).toFixed(2);
-                document.getElementById('rmbAfter').textContent = (totalRMB / cw || 0).toFixed(4);
-                document.getElementById('usdAfter').textContent = ((costWeight * usdKg) / cw || 0).toFixed(4);
+                // 赋值结果（处理0体积/0重量的边界情况）
+                document.getElementById('cw').textContent = volume > 0 ? cw.toFixed(2) : "-";
+                document.getElementById('ratio').textContent = volume > 0 ? (gw / volume).toFixed(4) : "-";
+                document.getElementById('costWeight').textContent = volume > 0 ? costWeight.toFixed(2) : "-";
+                document.getElementById('usdPerKg').textContent = rmbPerKg > 0 ? usdPerKg : "-";
+                document.getElementById('totalRMB').textContent = (volume > 0 && rmbPerKg > 0) ? totalRMB : "-";
+                document.getElementById('totalUSD').textContent = (volume > 0 && rmbPerKg > 0) ? (costWeight * usdPerKg).toFixed(2) : "-";
+                document.getElementById('rmbAfter').textContent = (volume > 0 && rmbPerKg > 0) ? (totalRMB / cw).toFixed(4) : "-";
+                document.getElementById('usdAfter').textContent = (volume > 0 && rmbPerKg > 0) ? ((costWeight * usdPerKg) / cw).toFixed(4) : "-";
+
             } catch (e) {
-                alert("计算错误: " + e.message);
+                document.getElementById('baseError').textContent = "计算错误: " + e.message;
             }
         }
     </script>
