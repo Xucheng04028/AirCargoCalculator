@@ -73,6 +73,14 @@
             font-size: 1rem;
             transition: border-color 0.3s;
         }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
         input:focus {
             border-color: #3498db;
             outline: none;
@@ -103,15 +111,6 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-        .dimension-hint {
-            font-size: 0.85rem;
-            color: #3498db;
-            margin: 0.3rem 0;
-            padding: 0.3rem 0.5rem;
-            background: #f0f7ff;
-            border-radius: 3px;
-            display: none;
         }
         .option-group {
             display: flex;
@@ -144,12 +143,10 @@
             background: #3498db;
             color: white;
             border: none;
-            padding: 0.8rem;
+            padding: 0.6rem;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 1.1rem;
-            margin-top: 0.8rem;
-            width: 100%;
+            font-size: 1rem;
             transition: background 0.3s, transform 0.1s;
         }
         button:hover {
@@ -198,7 +195,6 @@
                         <input type="number" id="height" step="1" placeholder="高" min="0">
                         <button type="button" onclick="calculateVolume()">计算体积</button>
                     </div>
-                    <div class="dimension-hint" id="volumeHint"></div>
                 </td>
                 <td>C.W. (计费重量, kg)</td>
                 <td class="result" id="cw">-</td>
@@ -266,12 +262,26 @@
                 <td class="result" id="totalUSD">-</td>
             </tr>
         </table>
-
-        <button onclick="calc()">计算所有结果</button>
     </div>
 
     <script>
-        // 厘米(cm)转立方米(m³)：1m³ = 100cm×100cm×100cm = 1,000,000 cm³
+        // 检查是否所有必填项都已填写
+        function areAllFieldsFilled() {
+            const volume = parseFloat(document.getElementById('volume').value) || 0;
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const gw = parseFloat(document.getElementById('gw').value) || 0;
+            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+            const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
+
+            // 体积可通过直接输入或长宽高计算，满足其一即可
+            const volumeValid = volume > 0 || (length > 0 && width > 0 && height > 0);
+            // 其他必填项必须大于0
+            return volumeValid && gw > 0 && rate > 0 && rmbPerKg > 0;
+        }
+
+        // 厘米(cm)转立方米(m³)
         function calculateVolume() {
             const length = Number(document.getElementById('length').value) || 0;
             const width = Number(document.getElementById('width').value) || 0;
@@ -279,23 +289,22 @@
             
             if (length <= 0 || width <= 0 || height <= 0) {
                 document.getElementById('baseError').textContent = "提示：长宽高必须为正数";
-                document.getElementById('volumeHint').style.display = "none";
                 return;
             }
             
             const volumeCubicCm = length * width * height;
             const volumeCubicM = volumeCubicCm / 1000000;
             
-            const hintEl = document.getElementById('volumeHint');
-            hintEl.textContent = `计算过程：${length}×${width}×${height}=${volumeCubicCm.toLocaleString()} cm³ → ${volumeCubicM.toFixed(6)} m³`;
-            hintEl.style.display = "block";
-            
             document.getElementById('volume').value = volumeCubicM.toFixed(6);
             document.getElementById('baseError').textContent = "";
-            calc();
+            
+            // 计算体积后检查是否所有字段已填，是则自动计算结果
+            if (areAllFieldsFilled()) {
+                calc();
+            }
         }
 
-        // 防抖函数：避免输入频繁触发计算
+        // 防抖函数
         function debounce(func, delay) {
             let timer;
             return (...args) => {
@@ -304,23 +313,35 @@
             };
         }
 
-        // 输入/选择变化时触发计算
+        // 输入/选择变化时触发检查，满足条件则自动计算
         const inputElements = document.querySelectorAll('input');
         inputElements.forEach(el => {
+            const handleInput = debounce(() => {
+                // 所有必填项填写完成后自动计算
+                if (areAllFieldsFilled()) {
+                    calc();
+                }
+            }, 300);
+
             if (el.type !== 'radio') {
-                el.addEventListener('input', debounce(calc, 300));
-                el.addEventListener('blur', calc);
+                el.addEventListener('input', handleInput);
+                el.addEventListener('blur', handleInput);
             } else {
-                el.addEventListener('change', calc);
+                el.addEventListener('change', handleInput);
             }
         });
 
-        // 切换计费标准，显示对应分泡选项
+        // 切换计费标准
         document.querySelectorAll('input[name="billing"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 const isMainland = radio.value === "0.006";
                 document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
                 document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
+                
+                // 切换后检查是否满足自动计算条件
+                if (areAllFieldsFilled()) {
+                    calc();
+                }
             });
         });
 
@@ -328,13 +349,23 @@
         function calc() {
             try {
                 const volume = parseFloat(document.getElementById('volume').value) || 0;
+                const length = parseFloat(document.getElementById('length').value) || 0;
+                const width = parseFloat(document.getElementById('width').value) || 0;
+                const height = parseFloat(document.getElementById('height').value) || 0;
                 const gw = parseFloat(document.getElementById('gw').value) || 0;
                 const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
                 const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
                 
+                // 自动补充体积（如果通过长宽高输入但未点击计算）
+                let finalVolume = volume;
+                if (length > 0 && width > 0 && height > 0 && finalVolume <= 0) {
+                    finalVolume = (length * width * height) / 1000000;
+                    document.getElementById('volume').value = finalVolume.toFixed(6);
+                }
+                
                 const errorHint = document.getElementById('baseError');
-                if (volume < 0 || gw < 0 || rate <= 0 || rmbPerKg < 0) {
-                    errorHint.textContent = "提示：体积、重量、汇率不能为负数，汇率必须大于0";
+                if (finalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
+                    errorHint.textContent = "提示：请填写所有必填参数（体积/重量/汇率/单价均需大于0）";
                     return;
                 } else {
                     errorHint.textContent = "";
@@ -345,21 +376,19 @@
                     ? +document.querySelector('input[name="bubble"]:checked').value 
                     : +document.querySelector('input[name="bubbleHk"]:checked').value;
 
-                // 关键参数计算
-                const cw = volume / billing;
+                const cw = finalVolume / billing;
                 const costWeight = gw + (cw - gw) * bubble;
                 const usdPerKg = (rmbPerKg / rate).toFixed(4);
                 const totalRMB = (costWeight * rmbPerKg).toFixed(2);
 
-                // 填充结果
-                document.getElementById('cw').textContent = volume > 0 ? cw.toFixed(2) : "-";
-                document.getElementById('ratio').textContent = volume > 0 ? (gw / volume).toFixed(4) : "-";
-                document.getElementById('costWeight').textContent = volume > 0 ? costWeight.toFixed(2) : "-";
-                document.getElementById('usdPerKg').textContent = rmbPerKg > 0 ? usdPerKg : "-";
-                document.getElementById('totalRMB').textContent = (volume > 0 && rmbPerKg > 0) ? totalRMB : "-";
-                document.getElementById('totalUSD').textContent = (volume > 0 && rmbPerKg > 0) ? (costWeight * usdPerKg).toFixed(2) : "-";
-                document.getElementById('rmbAfter').textContent = (volume > 0 && rmbPerKg > 0) ? (totalRMB / cw).toFixed(4) : "-";
-                document.getElementById('usdAfter').textContent = (volume > 0 && rmbPerKg > 0) ? ((costWeight * usdPerKg) / cw).toFixed(4) : "-";
+                document.getElementById('cw').textContent = cw.toFixed(2);
+                document.getElementById('ratio').textContent = (gw / finalVolume).toFixed(4);
+                document.getElementById('costWeight').textContent = costWeight.toFixed(2);
+                document.getElementById('usdPerKg').textContent = usdPerKg;
+                document.getElementById('totalRMB').textContent = totalRMB;
+                document.getElementById('totalUSD').textContent = (costWeight * usdPerKg).toFixed(2);
+                document.getElementById('rmbAfter').textContent = (totalRMB / cw).toFixed(4);
+                document.getElementById('usdAfter').textContent = ((costWeight * usdPerKg) / cw).toFixed(4);
 
             } catch (e) {
                 document.getElementById('baseError').textContent = "计算错误: " + e.message;
