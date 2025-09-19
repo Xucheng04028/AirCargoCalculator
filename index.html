@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>空运成本计算器</title>
     <style>
-        /* 基础样式合并，减少重复定义 */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
         html {
-            font-size: clamp(12px, 3vw, 16px); /* 响应式基准字体 */
+            font-size: clamp(12px, 3vw, 16px);
             -webkit-text-size-adjust: 100% !important;
         }
         body {
@@ -50,9 +49,8 @@
         }
         .section-title::before {
             content: "•";
-            color: #3498db; /* 小标题前添加点标记，增强视觉层次 */
+            color: #3498db;
         }
-        /* 表格与输入框样式优化 */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -65,7 +63,7 @@
         }
         th {
             background: #f2f2f2;
-            white-space: nowrap; /* 表头文字不换行 */
+            white-space: nowrap;
         }
         input {
             width: 100%;
@@ -73,16 +71,15 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 1rem;
-            transition: border-color 0.3s; /* 输入框聚焦动画 */
+            transition: border-color 0.3s;
         }
         input:focus {
-            border-color: #3498db; /* 聚焦时边框变蓝，提示当前输入状态 */
+            border-color: #3498db;
             outline: none;
         }
         input:invalid:not(:placeholder-shown) {
-            border-color: #e74c3c; /* 输入无效值时边框变红 */
+            border-color: #e74c3c;
         }
-        /* 体积计算专用样式 */
         .volume-calculator {
             display: flex;
             gap: 0.5rem;
@@ -103,8 +100,19 @@
             font-size: 0.9rem;
             color: #666;
             margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        /* 选项组与按钮样式增强 */
+        .dimension-hint {
+            font-size: 0.85rem;
+            color: #3498db;
+            margin: 0.3rem 0;
+            padding: 0.3rem 0.5rem;
+            background: #f0f7ff;
+            border-radius: 3px;
+            display: none;
+        }
         .option-group {
             display: flex;
             flex-wrap: wrap;
@@ -124,10 +132,10 @@
         }
         .option-group input[type="radio"]:checked + span {
             font-weight: bold;
-            color: #3498db; /* 选中项文字变蓝，更明显 */
+            color: #3498db;
         }
         .option-group label:hover {
-            background: #f0f7ff; /* 悬停时浅蓝背景，增强交互感 */
+            background: #f0f7ff;
         }
         .option-group input[type="radio"] {
             width: auto;
@@ -148,49 +156,49 @@
             background: #2980b9;
         }
         button:active {
-            transform: scale(0.99); /* 点击时轻微缩小，增强反馈 */
+            transform: scale(0.99);
         }
-        /* 结果样式强化 */
         .result {
             font-weight: bold;
             color: #2980b9;
-            background: #f0f7ff; /* 结果区背景色加深，与输入区区分更明显 */
+            background: #f0f7ff;
             transition: background 0.3s;
         }
         .result:hover {
-            background: #e7f0ff; /* 悬停结果区时背景变化，提示可复制 */
+            background: #e7f0ff;
         }
         .hidden {
             display: none;
         }
-        /* 错误提示样式 */
         .error-hint {
             color: #e74c3c;
             font-size: 0.9rem;
             margin: 0.3rem 0 0.8rem;
-            height: 1.2rem; /* 固定高度，避免布局跳动 */
+            height: 1.2rem;
         }
     </style>
 </head>
 <body>
     <h1>空运成本计算器</h1>
     <div class="calculator">
-        <!-- 基础参数 -->
         <div class="section-title">基础参数</div>
-        <div class="error-hint" id="baseError"></div> <!-- 错误提示区 -->
+        <div class="error-hint" id="baseError"></div>
         <table>
             <tr>
                 <td>体积 (m³)</td>
                 <td>
-                    <input type="number" id="volume" step="0.001" placeholder="输入体积" min="0" required>
-                    <!-- 新增体积计算功能：输入长宽高(mm)自动计算体积(m³) -->
-                    <div class="dimension-label">或输入尺寸(mm)计算体积：</div>
+                    <input type="number" id="volume" step="0.000001" placeholder="输入体积" min="0" required>
+                    <div class="dimension-label">
+                        <span>或输入尺寸计算体积：</span>
+                        <span style="color:#3498db">（单位：厘米cm）</span>
+                    </div>
                     <div class="volume-calculator">
                         <input type="number" id="length" step="1" placeholder="长" min="0">
                         <input type="number" id="width" step="1" placeholder="宽" min="0">
                         <input type="number" id="height" step="1" placeholder="高" min="0">
                         <button type="button" onclick="calculateVolume()">计算体积</button>
                     </div>
+                    <div class="dimension-hint" id="volumeHint"></div>
                 </td>
                 <td>C.W. (计费重量, kg)</td>
                 <td class="result" id="cw">-</td>
@@ -209,14 +217,12 @@
             </tr>
         </table>
 
-        <!-- 计费标准选择 -->
         <div class="section-title">计费标准选择</div>
         <div class="option-group">
             <label><input type="radio" name="billing" value="0.006" checked><span>大陆</span></label>
             <label><input type="radio" name="billing" value="0.007"><span>香港</span></label>
         </div>
 
-        <!-- 分泡比例选择 -->
         <div class="section-title">分泡比例选择</div>
         <div class="option-group" id="mainlandBubble">
             <label><input type="radio" name="bubble" value="0" checked><span>不分</span></label>
@@ -231,7 +237,6 @@
             <label><input type="radio" name="bubbleHk" value="0.6667"><span>2/3</span></label>
         </div>
 
-        <!-- 成本计算 -->
         <div class="section-title">成本计算</div>
         <table>
             <tr>
@@ -248,7 +253,6 @@
             </tr>
         </table>
 
-        <!-- 总成本 -->
         <div class="section-title">总成本</div>
         <table>
             <tr>
@@ -267,51 +271,31 @@
     </div>
 
     <script>
-        // 新增：体积计算函数（mm转m³）
+        // 厘米(cm)转立方米(m³)：1m³ = 100cm×100cm×100cm = 1,000,000 cm³
         function calculateVolume() {
-            const length = parseFloat(document.getElementById('length').value) || 0;
-            const width = parseFloat(document.getElementById('width').value) || 0;
-            const height = parseFloat(document.getElementById('height').value) || 0;
+            const length = Number(document.getElementById('length').value) || 0;
+            const width = Number(document.getElementById('width').value) || 0;
+            const height = Number(document.getElementById('height').value) || 0;
             
-            // 验证输入
             if (length <= 0 || width <= 0 || height <= 0) {
                 document.getElementById('baseError').textContent = "提示：长宽高必须为正数";
+                document.getElementById('volumeHint').style.display = "none";
                 return;
             }
             
-            // 计算体积：1m³ = 1e9 mm³ (1000×1000×1000)
-            const volume = (length * width * height) / 1000000000;
+            const volumeCubicCm = length * width * height;
+            const volumeCubicM = volumeCubicCm / 1000000;
             
-            // 填入体积输入框并保留6位小数（适合小体积）
-            document.getElementById('volume').value = volume.toFixed(6);
+            const hintEl = document.getElementById('volumeHint');
+            hintEl.textContent = `计算过程：${length}×${width}×${height}=${volumeCubicCm.toLocaleString()} cm³ → ${volumeCubicM.toFixed(6)} m³`;
+            hintEl.style.display = "block";
             
-            // 清空错误提示并触发计算
+            document.getElementById('volume').value = volumeCubicM.toFixed(6);
             document.getElementById('baseError').textContent = "";
             calc();
         }
 
-        // 初始化：给所有输入和选择框添加实时计算触发
-        const inputElements = document.querySelectorAll('input');
-        inputElements.forEach(el => {
-            // 输入变化、失去焦点时自动计算（除了radio，避免频繁触发）
-            if (el.type !== 'radio') {
-                el.addEventListener('input', debounce(calc, 300)); // 防抖：300ms内只算一次
-                el.addEventListener('blur', calc);
-            } else {
-                el.addEventListener('change', calc); // 单选框变化时立即计算
-            }
-        });
-
-        // 计费标准切换逻辑
-        document.querySelectorAll('input[name="billing"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                const isMainland = radio.value === "0.006";
-                document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
-                document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
-            });
-        });
-
-        // 防抖函数：避免输入时频繁计算
+        // 防抖函数：避免输入频繁触发计算
         function debounce(func, delay) {
             let timer;
             return (...args) => {
@@ -320,37 +304,54 @@
             };
         }
 
-        // 核心计算函数
+        // 输入/选择变化时触发计算
+        const inputElements = document.querySelectorAll('input');
+        inputElements.forEach(el => {
+            if (el.type !== 'radio') {
+                el.addEventListener('input', debounce(calc, 300));
+                el.addEventListener('blur', calc);
+            } else {
+                el.addEventListener('change', calc);
+            }
+        });
+
+        // 切换计费标准，显示对应分泡选项
+        document.querySelectorAll('input[name="billing"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const isMainland = radio.value === "0.006";
+                document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
+                document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
+            });
+        });
+
+        // 成本计算核心逻辑
         function calc() {
             try {
-                // 获取基础参数并验证
                 const volume = parseFloat(document.getElementById('volume').value) || 0;
                 const gw = parseFloat(document.getElementById('gw').value) || 0;
                 const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
                 const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
                 
-                // 输入验证：提示无效值
                 const errorHint = document.getElementById('baseError');
                 if (volume < 0 || gw < 0 || rate <= 0 || rmbPerKg < 0) {
                     errorHint.textContent = "提示：体积、重量、汇率不能为负数，汇率必须大于0";
-                    return; // 验证失败不计算
+                    return;
                 } else {
-                    errorHint.textContent = ""; // 清空错误提示
+                    errorHint.textContent = "";
                 }
 
-                // 获取计费标准和分泡比例
                 const billing = +document.querySelector('input[name="billing"]:checked').value;
                 const bubble = billing === 0.006 
                     ? +document.querySelector('input[name="bubble"]:checked').value 
                     : +document.querySelector('input[name="bubbleHk"]:checked').value;
 
-                // 核心计算
+                // 关键参数计算
                 const cw = volume / billing;
                 const costWeight = gw + (cw - gw) * bubble;
                 const usdPerKg = (rmbPerKg / rate).toFixed(4);
                 const totalRMB = (costWeight * rmbPerKg).toFixed(2);
 
-                // 赋值结果（处理0体积/0重量的边界情况）
+                // 填充结果
                 document.getElementById('cw').textContent = volume > 0 ? cw.toFixed(2) : "-";
                 document.getElementById('ratio').textContent = volume > 0 ? (gw / volume).toFixed(4) : "-";
                 document.getElementById('costWeight').textContent = volume > 0 ? costWeight.toFixed(2) : "-";
