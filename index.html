@@ -88,21 +88,38 @@
         input:invalid:not(:placeholder-shown) {
             border-color: #e74c3c;
         }
-        .volume-calculator {
+        /* 多件尺寸容器样式 */
+        .volume-container {
+            margin-top: 0.8rem;
+        }
+        .dimension-group {
             display: flex;
             gap: 0.5rem;
-            margin-top: 0.8rem;
-            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #fafafa;
+            border-radius: 4px;
         }
-        .volume-calculator input {
+        .dimension-group input {
             flex: 1;
-            min-width: 80px;
+            min-width: 60px;
         }
-        .volume-calculator button {
-            padding: 0.6rem;
-            font-size: 1rem;
-            margin-top: 0;
+        .dimension-group button {
+            padding: 0.6rem 0.8rem;
+            background: #e74c3c;
+            font-size: 0.9rem;
             white-space: nowrap;
+        }
+        .dimension-group button:hover {
+            background: #c0392b;
+        }
+        .add-dimension-btn {
+            margin: 0.5rem 0;
+            background: #2ecc71;
+        }
+        .add-dimension-btn:hover {
+            background: #27ae60;
         }
         .dimension-label {
             font-size: 0.9rem;
@@ -111,6 +128,9 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+        .dimension-label span:nth-child(2) {
+            color: #3498db;
         }
         .option-group {
             display: flex;
@@ -173,6 +193,21 @@
             margin: 0.3rem 0 0.8rem;
             height: 1.2rem;
         }
+        /* 件数输入区样式 */
+        .quantity-input {
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .quantity-input label {
+            font-size: 1rem;
+            color: #666;
+            white-space: nowrap;
+        }
+        .quantity-input input {
+            width: 120px;
+        }
     </style>
 </head>
 <body>
@@ -182,27 +217,39 @@
         <div class="error-hint" id="baseError"></div>
         <table>
             <tr>
-                <td>体积 (m³)</td>
+                <td>总体积 (m³)</td>
                 <td>
-                    <input type="number" id="volume" step="0.000001" placeholder="输入体积" min="0" required>
+                    <input type="number" id="totalVolume" step="0.000001" placeholder="直接输入总体积（可选）" min="0">
                     <div class="dimension-label">
-                        <span>或输入尺寸计算体积：</span>
-                        <span style="color:#3498db">（单位：厘米cm）</span>
+                        <span>或按件数输入尺寸计算总体积：</span>
+                        <span>（单位：厘米cm，每件尺寸独立计算）</span>
                     </div>
-                    <div class="volume-calculator">
-                        <input type="number" id="length" step="1" placeholder="长" min="0">
-                        <input type="number" id="width" step="1" placeholder="宽" min="0">
-                        <input type="number" id="height" step="1" placeholder="高" min="0">
-                        <button type="button" onclick="calculateVolume()">计算体积</button>
+                    <!-- 新增：货物件数输入 -->
+                    <div class="quantity-input">
+                        <label for="goodsQuantity">货物件数：</label>
+                        <input type="number" id="goodsQuantity" step="1" value="1" min="1" required>
                     </div>
+                    <!-- 动态尺寸输入容器 -->
+                    <div class="volume-container" id="dimensionContainer">
+                        <!-- 初始1组尺寸输入 -->
+                        <div class="dimension-group" data-index="1">
+                            <span>第1件：</span>
+                            <input type="number" class="dim-length" placeholder="长" min="0">
+                            <input type="number" class="dim-width" placeholder="宽" min="0">
+                            <input type="number" class="dim-height" placeholder="高" min="0">
+                            <button type="button" class="delete-dim" onclick="deleteDimensionGroup(1)">删除</button>
+                        </div>
+                    </div>
+                    <!-- 计算总体积按钮 -->
+                    <button type="button" class="add-dimension-btn" onclick="calculateTotalVolume()">计算所有货物总体积</button>
                 </td>
                 <td>C.W. (计费重量, kg)</td>
                 <td class="result" id="cw">-</td>
             </tr>
             <tr>
-                <td>G.W. (实际重量, kg)</td>
-                <td><input type="number" id="gw" step="0.001" placeholder="输入实际重量" min="0" required></td>
-                <td>比例</td>
+                <td>G.W. (总实际重量, kg)</td>
+                <td><input type="number" id="gw" step="0.001" placeholder="输入所有货物总实际重量" min="0" required></td>
+                <td>重量/体积比 (kg/m³)</td>
                 <td class="result" id="ratio">-</td>
             </tr>
             <tr>
@@ -265,46 +312,112 @@
     </div>
 
     <script>
-        // 检查是否所有必填项都已填写
+        // 页面加载完成后，绑定件数变化事件
+        window.onload = function() {
+            document.getElementById('goodsQuantity').addEventListener('change', adjustDimensionGroups);
+            // 初始化尺寸组（确保件数与尺寸组数量一致）
+            adjustDimensionGroups();
+        };
+
+        // 1. 调整尺寸输入组数量（根据件数自动新增/删除）
+        function adjustDimensionGroups() {
+            const quantity = parseInt(document.getElementById('goodsQuantity').value) || 1;
+            const container = document.getElementById('dimensionContainer');
+            const existingGroups = container.querySelectorAll('.dimension-group');
+            const existingCount = existingGroups.length;
+
+            // 情况1：件数增加 → 新增尺寸组
+            if (quantity > existingCount) {
+                for (let i = existingCount + 1; i <= quantity; i++) {
+                    const group = document.createElement('div');
+                    group.className = 'dimension-group';
+                    group.dataset.index = i;
+                    group.innerHTML = `
+                        <span>第${i}件：</span>
+                        <input type="number" class="dim-length" placeholder="长" min="0">
+                        <input type="number" class="dim-width" placeholder="宽" min="0">
+                        <input type="number" class="dim-height" placeholder="高" min="0">
+                        <button type="button" class="delete-dim" onclick="deleteDimensionGroup(${i})">删除</button>
+                    `;
+                    container.appendChild(group);
+                }
+            }
+            // 情况2：件数减少 → 删除多余尺寸组
+            else if (quantity < existingCount) {
+                for (let i = existingCount; i > quantity; i--) {
+                    const group = container.querySelector(`.dimension-group[data-index="${i}"]`);
+                    if (group) group.remove();
+                }
+            }
+        }
+
+        // 2. 删除单个尺寸组（删除后同步更新件数）
+        function deleteDimensionGroup(index) {
+            const container = document.getElementById('dimensionContainer');
+            const group = container.querySelector(`.dimension-group[data-index="${index}"]`);
+            if (group) {
+                group.remove();
+                // 更新剩余组的索引和序号（避免序号断层）
+                const remainingGroups = container.querySelectorAll('.dimension-group');
+                remainingGroups.forEach((g, i) => {
+                    const newIndex = i + 1;
+                    g.dataset.index = newIndex;
+                    g.querySelector('span').textContent = `第${newIndex}件：`;
+                    g.querySelector('.delete-dim').setAttribute('onclick', `deleteDimensionGroup(${newIndex})`);
+                });
+                // 同步更新件数输入框的值
+                document.getElementById('goodsQuantity').value = remainingGroups.length;
+            }
+        }
+
+        // 3. 计算所有货物的总体积（cm转m³）
+        function calculateTotalVolume() {
+            const groups = document.querySelectorAll('.dimension-group');
+            let totalVolume = 0;
+            const errorHint = document.getElementById('baseError');
+
+            // 遍历所有尺寸组，计算单组体积并汇总
+            for (let group of groups) {
+                const length = parseFloat(group.querySelector('.dim-length').value) || 0;
+                const width = parseFloat(group.querySelector('.dim-width').value) || 0;
+                const height = parseFloat(group.querySelector('.dim-height').value) || 0;
+
+                // 校验单组尺寸是否有效
+                if (length <= 0 || width <= 0 || height <= 0) {
+                    errorHint.textContent = `提示：第${group.dataset.index}件货物的长宽高必须为正数`;
+                    return;
+                }
+
+                // 单组体积（cm³转m³：除以100³=1000000）
+                const groupVolume = (length * width * height) / 1000000;
+                totalVolume += groupVolume;
+            }
+
+            // 显示总体积并清空错误提示
+            if (totalVolume > 0) {
+                document.getElementById('totalVolume').value = totalVolume.toFixed(6);
+                errorHint.textContent = "";
+                // 若其他参数已填，自动触发成本计算
+                if (areAllFieldsFilled()) calc();
+            } else {
+                errorHint.textContent = "提示：至少需填写1组有效尺寸（长宽高均为正数）";
+            }
+        }
+
+        // 4. 检查是否所有必填项都已填写
         function areAllFieldsFilled() {
-            const volume = parseFloat(document.getElementById('volume').value) || 0;
-            const length = parseFloat(document.getElementById('length').value) || 0;
-            const width = parseFloat(document.getElementById('width').value) || 0;
-            const height = parseFloat(document.getElementById('height').value) || 0;
+            const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
             const gw = parseFloat(document.getElementById('gw').value) || 0;
             const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
             const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
 
-            // 体积可通过直接输入或长宽高计算，满足其一即可
-            const volumeValid = volume > 0 || (length > 0 && width > 0 && height > 0);
+            // 体积可通过“直接输入”或“尺寸计算”获取，满足其一即可
+            const volumeValid = totalVolume > 0;
             // 其他必填项必须大于0
             return volumeValid && gw > 0 && rate > 0 && rmbPerKg > 0;
         }
 
-        // 厘米(cm)转立方米(m³)
-        function calculateVolume() {
-            const length = Number(document.getElementById('length').value) || 0;
-            const width = Number(document.getElementById('width').value) || 0;
-            const height = Number(document.getElementById('height').value) || 0;
-            
-            if (length <= 0 || width <= 0 || height <= 0) {
-                document.getElementById('baseError').textContent = "提示：长宽高必须为正数";
-                return;
-            }
-            
-            const volumeCubicCm = length * width * height;
-            const volumeCubicM = volumeCubicCm / 1000000;
-            
-            document.getElementById('volume').value = volumeCubicM.toFixed(6);
-            document.getElementById('baseError').textContent = "";
-            
-            // 计算体积后检查是否所有字段已填，是则自动计算结果
-            if (areAllFieldsFilled()) {
-                calc();
-            }
-        }
-
-        // 防抖函数
+        // 5. 防抖函数（避免输入频繁触发计算）
         function debounce(func, delay) {
             let timer;
             return (...args) => {
@@ -313,10 +426,13 @@
             };
         }
 
-        // 输入/选择变化时触发检查，满足条件则自动计算
+        // 6. 输入/选择变化时自动检查并计算
         const inputElements = document.querySelectorAll('input');
         inputElements.forEach(el => {
             const handleInput = debounce(() => {
+                if (el.id === 'goodsQuantity') {
+                    adjustDimensionGroups(); // 件数变化时先调整尺寸组
+                }
                 // 所有必填项填写完成后自动计算
                 if (areAllFieldsFilled()) {
                     calc();
@@ -331,58 +447,49 @@
             }
         });
 
-        // 切换计费标准
+        // 7. 切换计费标准（显示/隐藏对应分泡选项）
         document.querySelectorAll('input[name="billing"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 const isMainland = radio.value === "0.006";
                 document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
                 document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
                 
-                // 切换后检查是否满足自动计算条件
-                if (areAllFieldsFilled()) {
-                    calc();
-                }
+                if (areAllFieldsFilled()) calc();
             });
         });
 
-        // 成本计算核心逻辑
+        // 8. 成本计算核心逻辑（兼容多件体积）
         function calc() {
             try {
-                const volume = parseFloat(document.getElementById('volume').value) || 0;
-                const length = parseFloat(document.getElementById('length').value) || 0;
-                const width = parseFloat(document.getElementById('width').value) || 0;
-                const height = parseFloat(document.getElementById('height').value) || 0;
+                const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
                 const gw = parseFloat(document.getElementById('gw').value) || 0;
                 const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
                 const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
-                
-                // 自动补充体积（如果通过长宽高输入但未点击计算）
-                let finalVolume = volume;
-                if (length > 0 && width > 0 && height > 0 && finalVolume <= 0) {
-                    finalVolume = (length * width * height) / 1000000;
-                    document.getElementById('volume').value = finalVolume.toFixed(6);
-                }
-                
                 const errorHint = document.getElementById('baseError');
-                if (finalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
-                    errorHint.textContent = "提示：请填写所有必填参数（体积/重量/汇率/单价均需大于0）";
+
+                // 基础参数校验
+                if (totalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
+                    errorHint.textContent = "提示：请填写所有必填参数（总体积/总重量/汇率/单价均需大于0）";
                     return;
                 } else {
                     errorHint.textContent = "";
                 }
 
+                // 获取计费标准和分泡比例
                 const billing = +document.querySelector('input[name="billing"]:checked').value;
                 const bubble = billing === 0.006 
                     ? +document.querySelector('input[name="bubble"]:checked').value 
                     : +document.querySelector('input[name="bubbleHk"]:checked').value;
 
-                const cw = finalVolume / billing;
-                const costWeight = gw + (cw - gw) * bubble;
-                const usdPerKg = (rmbPerKg / rate).toFixed(4);
-                const totalRMB = (costWeight * rmbPerKg).toFixed(2);
+                // 核心计算公式
+                const cw = totalVolume / billing; // 计费重量
+                const costWeight = gw + (cw - gw) * bubble; // 分泡后成本计费重
+                const usdPerKg = (rmbPerKg / rate).toFixed(4); // USD单价
+                const totalRMB = (costWeight * rmbPerKg).toFixed(2); // 总成本（RMB）
 
+                // 填充计算结果
                 document.getElementById('cw').textContent = cw.toFixed(2);
-                document.getElementById('ratio').textContent = (gw / finalVolume).toFixed(4);
+                document.getElementById('ratio').textContent = (gw / totalVolume).toFixed(4);
                 document.getElementById('costWeight').textContent = costWeight.toFixed(2);
                 document.getElementById('usdPerKg').textContent = usdPerKg;
                 document.getElementById('totalRMB').textContent = totalRMB;
