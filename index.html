@@ -4,66 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>空运成本计算器</title>
+    <!-- 引入Font Awesome用于图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 基础样式 - 与主题无关的通用设置 */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 统一过渡曲线 */
         }
         html {
             font-size: clamp(12px, 3vw, 16px);
             -webkit-text-size-adjust: 100% !important;
         }
         body {
-            font-family: 'Microsoft YaHei', sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
             line-height: 1.6;
-            color: #333;
             max-width: 900px;
             margin: 0 auto;
-            padding: 1rem;
-            background: #f5f5f5;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative; /* 为主题切换按钮定位 */
         }
+        
+        /* 主题切换按钮 - 修改为文字按钮 */
+        .theme-toggle {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
         h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin: 1.5rem 0;
+            margin: 0 0 2.5rem;
             padding-bottom: 0.8rem;
-            border-bottom: 2px solid #3498db;
-            font-size: 2rem;
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+            position: relative;
+            align-self: flex-start; /* 标题左对齐 */
+        }
+        /* 完全移除标题下划线 */
+        h1::after {
+            display: none;
         }
         .calculator {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid;
         }
         .section-title {
             font-weight: bold;
-            color: #16a085;
-            margin: 1.2rem 0 0.6rem;
-            font-size: 1.2rem;
+            margin: 2rem 0 1.2rem;
+            padding-top: 1rem;
+            font-size: 1.25rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            border-top: 1px dashed;
+        }
+        .section-title:first-of-type {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
         }
         .section-title::before {
             content: "•";
-            color: #3498db;
+            font-size: 1.5rem;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1rem 0;
+            margin: 1.2rem 0;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 0.8rem;
+            border: 1px solid;
+            padding: 0.9rem;
             font-size: 1rem;
         }
         th {
-            background: #f2f2f2;
             white-space: nowrap;
+        }
+        tr:hover td {
+            background-color: inherit;
         }
         .total-cost-table td:first-child,
         .total-cost-table td:nth-child(2) {
@@ -72,11 +110,11 @@
             width: 0;
         }
         input {
-            padding: 0.6rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid;
+            border-radius: 6px;
             font-size: 1rem;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
         .quantity-input input {
             width: 55px;
@@ -84,7 +122,7 @@
         .dim-length input,
         .dim-width input,
         .dim-height input {
-            width: 105px;
+            width: 90px; /* 保持90px宽度 */
         }
         #totalVolume, #gw, #exchangeRate, #rmbPerKg {
             width: 100%;
@@ -98,87 +136,137 @@
             -moz-appearance: textfield;
         }
         input:focus {
-            border-color: #3498db;
+            box-shadow: 0 0 0 3px;
             outline: none;
         }
         input:invalid:not(:placeholder-shown) {
             border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
         }
         .volume-container {
-            margin-top: 0.8rem;
+            margin-top: 1rem;
         }
         .dimension-group {
             display: flex;
             gap: 0.5rem;
             align-items: center;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem;
-            background: #fafafa;
-            border-radius: 4px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
             flex-wrap: wrap;
+            border: 1px solid;
+        }
+        .dimension-group:hover {
+            border-color: inherit;
         }
         .dimension-group button {
-            padding: 0.6rem 0.8rem;
-            background: #e74c3c;
-            font-size: 0.9rem;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.95rem;
             white-space: nowrap;
-            min-width: 60px;
+            min-width: 65px;
+            position: relative;
+            overflow: hidden; /* 为动画做准备 */
         }
-        .dimension-group button:hover {
-            background: #c0392b;
+        .dimension-group button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .dimension-group button:hover::before {
+            left: 100%;
         }
         .button-group {
             display: flex;
-            gap: 0.5rem;
-            margin: 0.5rem 0;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .add-btn, .calculate-btn {
+            position: relative;
+            overflow: hidden; /* 为动画做准备 */
+        }
+        .add-btn::before, .calculate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .add-btn:hover::before, .calculate-btn:hover::before {
+            left: 100%;
         }
         .add-btn {
             background: #2ecc71;
             flex: 1;
         }
         .calculate-btn {
-            background: #3498db;
             flex: 3;
         }
-        .add-btn:hover, .calculate-btn:hover {
+        .add-btn:hover, .calculate-btn:hover, .dimension-group button:hover {
             opacity: 0.9;
+            transform: translateY(-3px); /* 上移效果增强 */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15); /* 阴影增强 */
+        }
+        .add-btn:active, .calculate-btn:active,
+        .dimension-group button:active {
+            transform: translateY(1px);
         }
         .empty-tip {
-            color: #666;
-            font-size: 0.9rem;
-            margin: 0.5rem 0;
-            padding: 0.5rem;
-            background: #f9f9f9;
-            border-radius: 4px;
+            font-size: 0.95rem;
+            margin: 0.8rem 0;
+            padding: 1.2rem;
+            border-radius: 8px;
+            border: 1px dashed;
+            text-align: center;
         }
         .dimension-label {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 0.3rem;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         .dimension-label span:nth-child(2) {
-            color: #3498db;
+            font-weight: 500;
         }
         .option-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.8rem;
-            margin: 0.8rem 0;
+            gap: 1rem;
+            margin: 1rem 0;
         }
         .option-group label {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
             position: relative;
+            overflow: hidden; /* 为动画做准备 */
+        }
+        .option-group label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .option-group label:hover::before {
+            left: 100%;
         }
         .option-group input[type="radio"] {
             position: absolute;
@@ -188,7 +276,6 @@
         }
         .option-group input[type="radio"]:checked + span {
             font-weight: bold;
-            color: #3498db;
         }
         .option-group input[type="radio"]:checked + span::before {
             content: "✓";
@@ -196,65 +283,394 @@
             width: 16px;
             height: 16px;
             margin-right: 6px;
-            color: #3498db;
             font-weight: bold;
         }
         .option-group label:hover {
-            background: #f0f7ff;
+            transform: translateY(-2px); /* 添加hover上移效果 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 添加hover阴影 */
         }
         button {
             color: white;
             border: none;
-            padding: 0.6rem;
-            border-radius: 4px;
+            padding: 0.8rem;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 1rem;
-            transition: background 0.3s, transform 0.1s;
-        }
-        button:active {
-            transform: scale(0.99);
+            transition: background 0.3s, transform 0.1s, box-shadow 0.2s;
+            font-weight: 500;
         }
         .result {
             font-weight: bold;
-            color: #2980b9;
-            background: #f0f7ff;
             transition: background 0.3s;
+            position: relative;
+        }
+        .result::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
         }
         .result:hover {
-            background: #e7f0ff;
+            background-color: inherit;
         }
         .hidden {
             display: none;
         }
         .error-hint {
             color: #e74c3c;
-            font-size: 0.9rem;
-            margin: 0.3rem 0 0.8rem;
+            font-size: 0.95rem;
+            margin: 0.5rem 0 1rem;
             height: 1.2rem;
+            padding: 0 0.2rem;
         }
         .input-hint {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 0.2rem;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
             text-align: center;
+            opacity: 0.9;
         }
+        .calculator-footer {
+            margin-top: 2.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px dashed;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        
+        /* 加载和计算动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .calculating {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+            .calculator {
+                padding: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.7rem 0.6rem;
+                font-size: 0.95rem;
+            }
+            
+            .section-title {
+                margin: 1.8rem 0 1rem;
+                font-size: 1.15rem;
+            }
+        }
+        
         @media (max-width: 600px) {
             .quantity-input input {
-                width: 50px;
+                width: 55px;
             }
             .dim-length input,
             .dim-width input,
             .dim-height input {
-                width: 85px;
+                width: 90px; /* 保持90px一致 */
             }
             .dimension-group {
                 gap: 0.3rem;
-                padding: 0.3rem;
+                padding: 0.8rem;
             }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            .option-group {
+                gap: 0.7rem;
+            }
+            
+            .option-group label {
+                padding: 0.6rem 0.9rem;
+                font-size: 0.95rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 1.2rem 0.8rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                margin: 0 0 1.8rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .add-btn, .calculate-btn {
+                flex: none;
+                width: 100%;
+            }
+            
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
+                font-size: 0.8rem;
+                padding: 0.4rem 0.6rem;
+            }
+        }
+
+        /* 基础样式 - 未指定主题时的默认值 */
+        body {
+            color: #2d3748;
+            background-color: #f8f9fa;
+            background-image: radial-gradient(#e0e7ff 0.5px, transparent 0.5px);
+            background-size: 10px 10px;
+        }
+        h1 {
+            color: #1e40af;
+        }
+        .calculator {
+            background: white;
+            border-color: #f1f5f9;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .section-title {
+            color: #1e40af;
+            border-top-color: #e2e8f0;
+        }
+        .section-title::before {
+            color: #1e40af;
+        }
+        th, td {
+            border-color: #e2e8f0;
+        }
+        th {
+            background: #f8fafc;
+            color: #4a5568;
+        }
+        tr:hover td {
+            background-color: #fefeff;
+        }
+        input {
+            border-color: #cbd5e0;
+            background-color: #ffffff;
+            color: #2d3748;
+        }
+        input:focus {
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        .dimension-group {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .dimension-group:hover {
+            background-color: #f0f7ff;
+            border-color: #bfdbfe;
+        }
+        .dimension-group button {
+            background: #e74c3c;
+        }
+        .dimension-group button:hover {
+            background: #c0392b;
+        }
+        .calculate-btn {
+            background: #1e40af;
+        }
+        .empty-tip {
+            color: #64748b;
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .dimension-label {
+            color: #64748b;
+        }
+        .dimension-label span:nth-child(2) {
+            color: #1e40af;
+        }
+        .option-group label {
+            border-color: #cbd5e0;
+            background-color: #ffffff;
+            color: #2d3748;
+        }
+        .option-group label:hover {
+            background-color: #1e40af; /* 悬停时变为主题色 */
+            color: white; /* 文字变白 */
+            border-color: #1e40af;
+        }
+        .option-group input[type="radio"]:checked + span {
+            color: #1e40af;
+        }
+        .option-group input[type="radio"]:checked + span::before {
+            color: #1e40af;
+        }
+        /* 选中状态在hover时保持白色文字 */
+        .option-group input[type="radio"]:checked + span {
+            transition: color 0.3s;
+        }
+        .option-group label:hover input[type="radio"]:checked + span {
+            color: white;
+        }
+        .option-group label:hover input[type="radio"]:checked + span::before {
+            color: white;
+        }
+        .result {
+            color: #1e40af;
+            background: #f0f7ff;
+        }
+        .result::after {
+            background-color: #1e40af;
+        }
+        .result:hover {
+            background: #e6f2ff;
+        }
+        .input-hint {
+            color: #64748b;
+        }
+        .calculator-footer {
+            border-top-color: #e2e8f0;
+            color: #64748b;
+        }
+        /* 浅色模式主题按钮 */
+        .theme-toggle {
+            color: #94a3b8;
+        }
+
+        /* 深色模式样式 - 通过类名控制 */
+        body.dark-mode {
+            color: #ffffff;
+            background-color: #141414;
+            background-image: radial-gradient(rgba(229, 9, 20, 0.1) 0.5px, transparent 0.5px);
+            background-size: 10px 10px;
+        }
+        body.dark-mode h1 {
+            color: #e50914;
+        }
+        body.dark-mode .calculator {
+            background: #1f1f1f;
+            border-color: #333333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        body.dark-mode .section-title {
+            color: #e50914;
+            border-top-color: #333333;
+        }
+        body.dark-mode .section-title::before {
+            color: #e50914;
+        }
+        body.dark-mode th, body.dark-mode td {
+            border-color: #333333;
+        }
+        body.dark-mode th {
+            background: #2d2d2d;
+            color: #bbbbbb;
+        }
+        body.dark-mode tr:hover td {
+            background-color: #282828;
+        }
+        body.dark-mode input {
+            border-color: #444444;
+            background-color: #333333;
+            color: #ffffff;
+        }
+        body.dark-mode input:focus {
+            border-color: #e50914;
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
+        }
+        body.dark-mode .dimension-group {
+            background: #2d2d2d;
+            border-color: #444444;
+        }
+        body.dark-mode .dimension-group:hover {
+            background-color: #333333;
+            border-color: #555555;
+        }
+        body.dark-mode .dimension-group button {
+            background: #e50914;
+        }
+        body.dark-mode .dimension-group button:hover {
+            background: #b81d24;
+        }
+        body.dark-mode .calculate-btn {
+            background: #e50914;
+        }
+        body.dark-mode .empty-tip {
+            color: #999999;
+            background: #2d2d2d;
+            border-color: #444444;
+        }
+        body.dark-mode .dimension-label {
+            color: #999999;
+        }
+        body.dark-mode .dimension-label span:nth-child(2) {
+            color: #e50914;
+        }
+        body.dark-mode .option-group label {
+            border-color: #444444;
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+        body.dark-mode .option-group label:hover {
+            background-color: #e50914; /* 悬停时变为主题色 */
+            color: white; /* 文字保持白色 */
+            border-color: #e50914;
+        }
+        body.dark-mode .option-group input[type="radio"]:checked + span {
+            color: #e50914;
+        }
+        body.dark-mode .option-group input[type="radio"]:checked + span::before {
+            color: #e50914;
+        }
+        /* 选中状态在hover时保持白色文字 */
+        body.dark-mode .option-group label:hover input[type="radio"]:checked + span {
+            color: white;
+        }
+        body.dark-mode .option-group label:hover input[type="radio"]:checked + span::before {
+            color: white;
+        }
+        body.dark-mode .result {
+            color: #e50914;
+            background: #282828;
+        }
+        body.dark-mode .result::after {
+            background-color: #e50914;
+        }
+        body.dark-mode .result:hover {
+            background: #333333;
+        }
+        body.dark-mode .input-hint {
+            color: #999999;
+        }
+        body.dark-mode .calculator-footer {
+            border-top-color: #444444;
+            color: #999999;
+        }
+        /* 深色模式主题按钮 */
+        body.dark-mode .theme-toggle {
+            color: #999999;
         }
     </style>
 </head>
 <body>
+    <!-- 主题切换按钮 - 改为文字按钮 -->
+    <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+        切换主题
+    </button>
+    
     <h1>空运成本计算器</h1>
     <div class="calculator">
         <div class="section-title">基础参数</div>
@@ -344,14 +760,55 @@
                 <td class="result" id="totalUSD">-</td>
             </tr>
         </table>
+
+        <div class="calculator-footer">
+            输入相关参数后自动计算，结果仅供参考
+        </div>
     </div>
 
     <script>
-        window.onload = () => initEventListeners();
+        // 主题切换功能
+        function setupThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            // 检查本地存储或系统偏好
+            const savedTheme = localStorage.getItem('preferred-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // 应用保存的主题或系统偏好
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                body.classList.add('dark-mode');
+            }
+            
+            // 添加切换事件
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                
+                // 保存用户偏好
+                const isDark = body.classList.contains('dark-mode');
+                localStorage.setItem('preferred-theme', isDark ? 'dark' : 'light');
+                
+                // 添加点击动画
+                themeToggle.classList.add('calculating');
+                setTimeout(() => {
+                    themeToggle.classList.remove('calculating');
+                }, 300);
+            });
+        }
+        
+        window.onload = () => {
+            setupThemeToggle();
+            initEventListeners();
+        };
 
         function initEventListeners() {
             document.querySelectorAll('input').forEach(el => {
-                const handleInput = debounce(() => areAllFieldsFilled() && calc(), 300);
+                const handleInput = debounce(() => {
+                    if (areAllFieldsFilled()) {
+                        calc();
+                    }
+                }, 300);
                 
                 if (el.type !== 'radio') {
                     el.addEventListener('input', handleInput);
@@ -366,7 +823,7 @@
                     const isMainland = radio.value === "0.006";
                     document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
                     document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
-                    areAllFieldsFilled() && calc();
+                    if (areAllFieldsFilled()) calc();
                 });
             });
         }
@@ -404,8 +861,18 @@
             
             container.appendChild(group);
 
+            // 添加淡入动画
+            group.style.opacity = '0';
+            group.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                group.style.opacity = '1';
+                group.style.transform = 'translateY(0)';
+            }, 10);
+
             group.querySelectorAll('input').forEach(el => {
-                const handleInput = debounce(() => areAllFieldsFilled() && calc(), 300);
+                const handleInput = debounce(() => {
+                    if (areAllFieldsFilled()) calc();
+                }, 300);
                 if (el.type !== 'radio') {
                     el.addEventListener('input', handleInput);
                     el.addEventListener('blur', handleInput);
@@ -418,60 +885,75 @@
             const group = container.querySelector(`.dimension-group[data-index="${index}"]`);
             if (!group) return;
             
-            group.remove();
-            const remainingGroups = container.querySelectorAll('.dimension-group');
-            
-            remainingGroups.forEach((g, i) => {
-                const newIndex = i + 1;
-                g.dataset.index = newIndex;
-                g.querySelector('.delete-dim').setAttribute('onclick', `deleteDimensionGroup(${newIndex})`);
-            });
+            // 删除动画
+            group.style.opacity = '0';
+            group.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                group.remove();
+                const remainingGroups = container.querySelectorAll('.dimension-group');
+                
+                remainingGroups.forEach((g, i) => {
+                    const newIndex = i + 1;
+                    g.dataset.index = newIndex;
+                    g.querySelector('.delete-dim').setAttribute('onclick', `deleteDimensionGroup(${newIndex})`);
+                });
 
-            if (remainingGroups.length === 0) {
-                const emptyTip = document.createElement('div');
-                emptyTip.className = 'empty-tip';
-                emptyTip.id = 'emptyTip';
-                emptyTip.textContent = '点击"添加"按钮,开始填写货物规格';
-                container.appendChild(emptyTip);
-            }
+                if (remainingGroups.length === 0) {
+                    const emptyTip = document.createElement('div');
+                    emptyTip.className = 'empty-tip';
+                    emptyTip.id = 'emptyTip';
+                    emptyTip.textContent = '点击"添加"按钮,开始填写货物规格';
+                    container.appendChild(emptyTip);
+                }
+            }, 200);
         }
 
         function calculateTotalVolume() {
-            const container = document.getElementById('dimensionContainer');
-            const groups = container.querySelectorAll('.dimension-group');
-            const errorHint = document.getElementById('baseError');
-            let totalVolume = 0;
+            const calculateBtn = document.querySelector('.calculate-btn');
+            calculateBtn.classList.add('calculating');
+            
+            setTimeout(() => {
+                const container = document.getElementById('dimensionContainer');
+                const groups = container.querySelectorAll('.dimension-group');
+                const errorHint = document.getElementById('baseError');
+                let totalVolume = 0;
 
-            if (groups.length === 0) {
-                errorHint.textContent = "提示:请先点击\"添加\"按钮,填写货物规格";
-                return;
-            }
-
-            for (let group of groups) {
-                const length = parseFloat(group.querySelector('.dim-length input').value) || 0;
-                const width = parseFloat(group.querySelector('.dim-width input').value) || 0;
-                const height = parseFloat(group.querySelector('.dim-height input').value) || 0;
-                const quantity = parseInt(group.querySelector('.dim-quantity').value) || 0;
-
-                if (length <= 0 || width <= 0 || height <= 0) {
-                    errorHint.textContent = `提示:第${group.dataset.index}组的长宽高必须为正数`;
-                    return;
-                }
-                if (quantity <= 0) {
-                    errorHint.textContent = `提示:第${group.dataset.index}组的数量必须为正数`;
+                if (groups.length === 0) {
+                    errorHint.textContent = "提示:请先点击\"添加\"按钮,填写货物规格";
+                    calculateBtn.classList.remove('calculating');
                     return;
                 }
 
-                totalVolume += (length * width * height) / 1000000 * quantity;
-            }
+                for (let group of groups) {
+                    const length = parseFloat(group.querySelector('.dim-length input').value) || 0;
+                    const width = parseFloat(group.querySelector('.dim-width input').value) || 0;
+                    const height = parseFloat(group.querySelector('.dim-height input').value) || 0;
+                    const quantity = parseInt(group.querySelector('.dim-quantity').value) || 0;
 
-            if (totalVolume > 0) {
-                document.getElementById('totalVolume').value = totalVolume.toFixed(6);
-                errorHint.textContent = "";
-                areAllFieldsFilled() && calc();
-            } else {
-                errorHint.textContent = "提示:所有货物规格均无效,请检查输入";
-            }
+                    if (length <= 0 || width <= 0 || height <= 0) {
+                        errorHint.textContent = `提示:第${group.dataset.index}组的长宽高必须为正数`;
+                        calculateBtn.classList.remove('calculating');
+                        return;
+                    }
+                    if (quantity <= 0) {
+                        errorHint.textContent = `提示:第${group.dataset.index}组的数量必须为正数`;
+                        calculateBtn.classList.remove('calculating');
+                        return;
+                    }
+
+                    totalVolume += (length * width * height) / 1000000 * quantity;
+                }
+
+                if (totalVolume > 0) {
+                    document.getElementById('totalVolume').value = totalVolume.toFixed(6);
+                    errorHint.textContent = "";
+                    if (areAllFieldsFilled()) calc();
+                } else {
+                    errorHint.textContent = "提示:所有货物规格均无效,请检查输入";
+                }
+                
+                calculateBtn.classList.remove('calculating');
+            }, 300);
         }
 
         function areAllFieldsFilled() {
@@ -493,47 +975,60 @@
 
         function calc() {
             try {
-                const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
-                const gw = parseFloat(document.getElementById('gw').value) || 0;
-                const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
-                const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
-                const errorHint = document.getElementById('baseError');
+                // 为结果区域添加计算动画
+                const resultElements = document.querySelectorAll('.result');
+                resultElements.forEach(el => {
+                    el.classList.add('calculating');
+                });
 
-                if (totalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
-                    errorHint.textContent = "提示:请填写所有必填参数(总体积/总重量/汇率/单价均需大于0)";
-                    return;
-                }
-                errorHint.textContent = "";
+                setTimeout(() => {
+                    const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
+                    const gw = parseFloat(document.getElementById('gw').value) || 0;
+                    const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
+                    const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
+                    const errorHint = document.getElementById('baseError');
 
-                const billing = +document.querySelector('input[name="billing"]:checked').value;
-                const bubble = billing === 0.006 
-                    ? +document.querySelector('input[name="bubble"]:checked').value 
-                    : +document.querySelector('input[name="bubbleHk"]:checked').value;
+                    if (totalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
+                        errorHint.textContent = "提示:请填写所有必填参数(总体积/总重量/汇率/单价均需大于0)";
+                        resultElements.forEach(el => el.classList.remove('calculating'));
+                        return;
+                    }
+                    errorHint.textContent = "";
 
-                const cw = totalVolume / billing;
-                const costWeight = gw + (cw - gw) * bubble;
-                const usdPerKg = (rmbPerKg / rate).toFixed(4);
-                const totalRMB = (costWeight * rmbPerKg).toFixed(2);
+                    const billing = +document.querySelector('input[name="billing"]:checked').value;
+                    const bubble = billing === 0.006 
+                        ? +document.querySelector('input[name="bubble"]:checked').value 
+                        : +document.querySelector('input[name="bubbleHk"]:checked').value;
 
-                document.getElementById('cw').textContent = cw.toFixed(2);
-                document.getElementById('ratio').textContent = (gw / totalVolume).toFixed(4);
-                document.getElementById('costWeight').textContent = costWeight.toFixed(2);
-                document.getElementById('usdPerKg').textContent = usdPerKg;
-                document.getElementById('totalRMB').textContent = totalRMB;
-                document.getElementById('totalUSD').textContent = (costWeight * usdPerKg).toFixed(2);
-                document.getElementById('rmbAfter').textContent = (totalRMB / cw).toFixed(4);
-                document.getElementById('usdAfter').textContent = ((costWeight * usdPerKg) / cw).toFixed(4);
+                    const cw = totalVolume / billing;
+                    const costWeight = gw + (cw - gw) * bubble;
+                    const usdPerKg = (rmbPerKg / rate).toFixed(4);
+                    const totalRMB = (costWeight * rmbPerKg).toFixed(2);
+
+                    document.getElementById('cw').textContent = cw.toFixed(2);
+                    document.getElementById('ratio').textContent = (gw / totalVolume).toFixed(4);
+                    document.getElementById('costWeight').textContent = costWeight.toFixed(2);
+                    document.getElementById('usdPerKg').textContent = usdPerKg;
+                    document.getElementById('totalRMB').textContent = totalRMB;
+                    document.getElementById('totalUSD').textContent = (costWeight * usdPerKg).toFixed(2);
+                    document.getElementById('rmbAfter').textContent = (totalRMB / cw).toFixed(4);
+                    document.getElementById('usdAfter').textContent = ((costWeight * usdPerKg) / cw).toFixed(4);
+
+                    // 移除计算动画
+                    resultElements.forEach(el => {
+                        el.classList.remove('calculating');
+                    });
+
+                }, 300);
 
             } catch (e) {
                 document.getElementById('baseError').textContent = "计算错误:" + e.message;
+                document.querySelectorAll('.result').forEach(el => {
+                    el.classList.remove('calculating');
+                });
             }
         }
     </script>
 </body>
 </html>
-
-
-
-
-
-
+    
