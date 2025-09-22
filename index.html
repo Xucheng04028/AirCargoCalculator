@@ -65,6 +65,12 @@
             background: #f2f2f2;
             white-space: nowrap;
         }
+        .total-cost-table td:first-child,
+        .total-cost-table td:nth-child(2) {
+            border: none;
+            padding: 0;
+            width: 0;
+        }
         input {
             padding: 0.6rem;
             border: 1px solid #ddd;
@@ -172,16 +178,29 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
+            position: relative;
+        }
+        .option-group input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
         .option-group input[type="radio"]:checked + span {
             font-weight: bold;
             color: #3498db;
         }
+        .option-group input[type="radio"]:checked + span::before {
+            content: "✓";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            color: #3498db;
+            font-weight: bold;
+        }
         .option-group label:hover {
             background: #f0f7ff;
-        }
-        .option-group input[type="radio"] {
-            width: auto;
         }
         button {
             color: white;
@@ -219,7 +238,6 @@
             margin-top: 0.2rem;
             text-align: center;
         }
-        
         @media (max-width: 600px) {
             .quantity-input input {
                 width: 60px;
@@ -243,45 +261,45 @@
         <div class="error-hint" id="baseError"></div>
         <table>
             <tr>
-                <td>总体积 (m³)</td>
+                <td>总体积(m³)</td>
                 <td>
-                    <input type="number" id="totalVolume" step="0.000001" placeholder="直接输入总体积（可选）" min="0">
+                    <input type="number" id="totalVolume" step="0.000001" placeholder="直接输入总体积(可选)" min="0">
                     <div class="dimension-label">
-                        <span>或自行输入件数及尺寸：</span>
-                        <span>（单位：厘米cm）</span>
+                        <span>或自行输入件数及尺寸</span>
+                        <span>(单位:厘米cm)</span>
                     </div>
                     <div class="volume-container" id="dimensionContainer">
-                        <div class="empty-tip" id="emptyTip">点击“添加”按钮，开始填写货物规格</div>
+                        <div class="empty-tip" id="emptyTip">点击"添加"按钮,填写货物规格</div>
                     </div>
                     <div class="button-group">
                         <button type="button" class="add-btn" onclick="addNewDimensionGroup()">添加</button>
-                        <button type="button" class="calculate-btn" onclick="calculateTotalVolume()">计算所有货物总体积</button>
+                        <button type="button" class="calculate-btn" onclick="calculateTotalVolume()">计算总体积</button>
                     </div>
                 </td>
-                <td>C.W. (计费重量, kg)</td>
+                <td>C.W. (计费重量,kg)</td>
                 <td class="result" id="cw">-</td>
             </tr>
             <tr>
-                <td>G.W. (总实际重量, kg)</td>
+                <td>G.W. (总实际重量,kg)</td>
                 <td><input type="number" id="gw" step="0.001" placeholder="输入所有货物总实际重量" min="0" required></td>
-                <td>重量/体积比 (kg/m³)</td>
+                <td>重量/体积比(kg/m³)</td>
                 <td class="result" id="ratio">-</td>
             </tr>
             <tr>
                 <td>USD/RMB汇率</td>
                 <td><input type="number" id="exchangeRate" step="0.0001" value="7.2" min="0.0001" required></td>
-                <td>成本计费重 (kg)</td>
+                <td>成本计费重(kg)</td>
                 <td class="result" id="costWeight">-</td>
             </tr>
         </table>
 
-        <div class="section-title">计费标准选择</div>
+        <div class="section-title">计费标准</div>
         <div class="option-group">
             <label><input type="radio" name="billing" value="0.006" checked><span>大陆</span></label>
             <label><input type="radio" name="billing" value="0.007"><span>香港</span></label>
         </div>
 
-        <div class="section-title">分泡比例选择</div>
+        <div class="section-title">分泡比例</div>
         <div class="option-group" id="mainlandBubble">
             <label><input type="radio" name="bubble" value="0" checked><span>不分</span></label>
             <label><input type="radio" name="bubble" value="0.2"><span>28分</span></label>
@@ -312,14 +330,16 @@
         </table>
 
         <div class="section-title">总成本</div>
-        <table>
+        <table class="total-cost-table">
             <tr>
-                <td colspan="2"></td>
+                <td></td>
+                <td></td>
                 <td>空运总成本RMB</td>
                 <td class="result" id="totalRMB">-</td>
             </tr>
             <tr>
-                <td colspan="2"></td>
+                <td></td>
+                <td></td>
                 <td>空运总成本USD</td>
                 <td class="result" id="totalUSD">-</td>
             </tr>
@@ -327,17 +347,12 @@
     </div>
 
     <script>
-        window.onload = function() {
-            initEventListeners();
-        };
+        window.onload = () => initEventListeners();
 
         function initEventListeners() {
-            const inputElements = document.querySelectorAll('input');
-            inputElements.forEach(el => {
-                const handleInput = debounce(() => {
-                    if (areAllFieldsFilled()) calc();
-                }, 300);
-
+            document.querySelectorAll('input').forEach(el => {
+                const handleInput = debounce(() => areAllFieldsFilled() && calc(), 300);
+                
                 if (el.type !== 'radio') {
                     el.addEventListener('input', handleInput);
                     el.addEventListener('blur', handleInput);
@@ -351,8 +366,7 @@
                     const isMainland = radio.value === "0.006";
                     document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
                     document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
-                    
-                    if (areAllFieldsFilled()) calc();
+                    areAllFieldsFilled() && calc();
                 });
             });
         }
@@ -390,12 +404,8 @@
             
             container.appendChild(group);
 
-            const newInputs = group.querySelectorAll('input');
-            newInputs.forEach(el => {
-                const handleInput = debounce(() => {
-                    if (areAllFieldsFilled()) calc();
-                }, 300);
-                
+            group.querySelectorAll('input').forEach(el => {
+                const handleInput = debounce(() => areAllFieldsFilled() && calc(), 300);
                 if (el.type !== 'radio') {
                     el.addEventListener('input', handleInput);
                     el.addEventListener('blur', handleInput);
@@ -406,23 +416,23 @@
         function deleteDimensionGroup(index) {
             const container = document.getElementById('dimensionContainer');
             const group = container.querySelector(`.dimension-group[data-index="${index}"]`);
-            if (group) {
-                group.remove();
+            if (!group) return;
+            
+            group.remove();
+            const remainingGroups = container.querySelectorAll('.dimension-group');
+            
+            remainingGroups.forEach((g, i) => {
+                const newIndex = i + 1;
+                g.dataset.index = newIndex;
+                g.querySelector('.delete-dim').setAttribute('onclick', `deleteDimensionGroup(${newIndex})`);
+            });
 
-                const remainingGroups = container.querySelectorAll('.dimension-group');
-                remainingGroups.forEach((g, i) => {
-                    const newIndex = i + 1;
-                    g.dataset.index = newIndex;
-                    g.querySelector('.delete-dim').setAttribute('onclick', `deleteDimensionGroup(${newIndex})`);
-                });
-
-                if (remainingGroups.length === 0) {
-                    const emptyTip = document.createElement('div');
-                    emptyTip.className = 'empty-tip';
-                    emptyTip.id = 'emptyTip';
-                    emptyTip.textContent = '点击“添加”按钮，开始填写货物规格';
-                    container.appendChild(emptyTip);
-                }
+            if (remainingGroups.length === 0) {
+                const emptyTip = document.createElement('div');
+                emptyTip.className = 'empty-tip';
+                emptyTip.id = 'emptyTip';
+                emptyTip.textContent = '点击"添加"按钮,开始填写货物规格';
+                container.appendChild(emptyTip);
             }
         }
 
@@ -433,7 +443,7 @@
             let totalVolume = 0;
 
             if (groups.length === 0) {
-                errorHint.textContent = "提示：请先点击“添加”按钮，填写货物规格";
+                errorHint.textContent = "提示:请先点击\"添加\"按钮,填写货物规格";
                 return;
             }
 
@@ -444,24 +454,23 @@
                 const quantity = parseInt(group.querySelector('.dim-quantity').value) || 0;
 
                 if (length <= 0 || width <= 0 || height <= 0) {
-                    errorHint.textContent = `提示：第${group.dataset.index}组的长宽高必须为正数`;
+                    errorHint.textContent = `提示:第${group.dataset.index}组的长宽高必须为正数`;
                     return;
                 }
                 if (quantity <= 0) {
-                    errorHint.textContent = `提示：第${group.dataset.index}组的数量必须为正数`;
+                    errorHint.textContent = `提示:第${group.dataset.index}组的数量必须为正数`;
                     return;
                 }
 
-                const groupVolume = (length * width * height) / 1000000 * quantity;
-                totalVolume += groupVolume;
+                totalVolume += (length * width * height) / 1000000 * quantity;
             }
 
             if (totalVolume > 0) {
                 document.getElementById('totalVolume').value = totalVolume.toFixed(6);
                 errorHint.textContent = "";
-                if (areAllFieldsFilled()) calc();
+                areAllFieldsFilled() && calc();
             } else {
-                errorHint.textContent = "提示：所有货物规格均无效，请检查输入";
+                errorHint.textContent = "提示:所有货物规格均无效,请检查输入";
             }
         }
 
@@ -491,11 +500,10 @@
                 const errorHint = document.getElementById('baseError');
 
                 if (totalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
-                    errorHint.textContent = "提示：请填写所有必填参数（总体积/总重量/汇率/单价均需大于0）";
+                    errorHint.textContent = "提示:请填写所有必填参数(总体积/总重量/汇率/单价均需大于0)";
                     return;
-                } else {
-                    errorHint.textContent = "";
                 }
+                errorHint.textContent = "";
 
                 const billing = +document.querySelector('input[name="billing"]:checked').value;
                 const bubble = billing === 0.006 
@@ -517,7 +525,7 @@
                 document.getElementById('usdAfter').textContent = ((costWeight * usdPerKg) / cw).toFixed(4);
 
             } catch (e) {
-                document.getElementById('baseError').textContent = "计算错误: " + e.message;
+                document.getElementById('baseError').textContent = "计算错误:" + e.message;
             }
         }
     </script>
