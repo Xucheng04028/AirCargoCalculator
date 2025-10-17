@@ -677,23 +677,23 @@
             <tr>
                 <td>总体积(m³)</td>
                 <td>
-                    <input type="number" id="totalVolume" step="0.0001" placeholder="直接输入总体积(可选)" min="0">
+                    <input type="number" id="totalVolume" step="0.0001" placeholder="直接输入总体积" min="0">
                     <div class="dimension-label">
-                        <span>或自行输入件数及尺寸</span>
+                        <span>或输入件数及尺寸</span>
                     </div>
                     <div class="volume-container" id="dimensionContainer">
-                        <div class="empty-tip" id="emptyTip">点击"添加"按钮,填写货物规格</div>
+                        <div class="empty-tip" id="emptyTip">点击添加,填写货物规格</div>
                     </div>
                     <div class="button-group">
                         <button type="button" class="add-btn" onclick="addNewDimensionGroup()">添加</button>
                         <button type="button" class="calculate-btn" onclick="calculateTotalVolume()">计算总体积</button>
                     </div>
                 </td>
-                <td>C.W. (计费重量,kg)</td>
+                <td>C.W.(计费重量,kg)</td>
                 <td class="result" id="cw">-</td>
             </tr>
             <tr>
-                <td>G.W. (总实际重量,kg)</td>
+                <td>G.W.(总实际重量,kg)</td>
                 <td><input type="number" id="gw" step="0.001" placeholder="输入所有货物总实际重量" min="0" required></td>
                 <td>重量/体积比(kg/m³)</td>
                 <td class="result" id="ratio">-</td>
@@ -730,7 +730,7 @@
         <table>
             <tr>
                 <td>成本空运费RMB/KG</td>
-                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价或通过目标价反向计算" min="0"></td>
+                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价或通过目标价计算" min="0"></td>
                 <td>分泡后RMB/KG</td>
                 <td class="result" id="rmbAfter">-</td>
             </tr>
@@ -1101,3 +1101,4 @@
     </script>
 </body>
 </html>
+
