@@ -1,1084 +1,272 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>货代成本计算器</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        html {
-            font-size: clamp(12px, 3vw, 16px);
-            -webkit-text-size-adjust: 100% !important;
-        }
-        body {
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            line-height: 1.6;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        
-        .theme-toggle {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: none;
-            border: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-            padding: 0.5rem 0.8rem;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-        
-        .theme-toggle:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        
-        h1 {
-            margin: 0 0 2.5rem;
-            padding-bottom: 0.8rem;
-            font-size: 2.2rem;
-            letter-spacing: -0.5px;
-            position: relative;
-            align-self: flex-start;
-        }
-        
-        .calculator {
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 1px solid;
-        }
-        .section-title {
-            font-weight: bold;
-            margin: 2rem 0 1.2rem;
-            padding-top: 1rem;
-            font-size: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border-top: 1px dashed;
-        }
-        .section-title:first-of-type {
-            margin-top: 0;
-            padding-top: 0;
-            border-top: none;
-        }
-        .section-title::before {
-            content: "•";
-            font-size: 1.5rem;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1.2rem 0;
-        }
-        th, td {
-            border: 1px solid;
-            padding: 0.9rem;
-            font-size: 1rem;
-        }
-        th {
-            white-space: nowrap;
-        }
-        tr:hover td {
-            background-color: inherit;
-        }
-        .total-cost-table td:first-child,
-        .total-cost-table td:nth-child(2) {
-            border: none;
-            padding: 0;
-            width: 0;
-        }
-        input {
-            padding: 0.6rem 0.4rem;
-            border: 1px solid;
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .quantity-input input {
-            width: 50px;
-        }
-        .dim-length input,
-        .dim-width input,
-        .dim-height input {
-            width: 80px;
-        }
-        #totalVolume, #gw, #exchangeRate, #rmbPerKg, #targetUsdPrice {
-            width: 100%;
-        }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-        input:focus {
-            box-shadow: 0 0 0 3px;
-            outline: none;
-        }
-        input:invalid:not(:placeholder-shown) {
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
-        }
-        .volume-container {
-            margin-top: 1rem;
-        }
-        .dimension-group {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            flex-wrap: wrap;
-            border: 1px solid;
-        }
-        .dimension-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .dimension-group:hover {
-            border-color: inherit;
-        }
-        .dimension-group button {
-            padding: 0.7rem 0.9rem;
-            font-size: 0.95rem;
-            white-space: nowrap;
-            min-width: 65px;
-            position: relative;
-            overflow: hidden;
-        }
-        .dimension-group button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.6s ease;
-        }
-        .dimension-group button:hover::before {
-            left: 100%;
-        }
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            margin: 1rem 0;
-        }
-        .add-btn, .calculate-btn {
-            position: relative;
-            overflow: hidden;
-        }
-        .add-btn::before, .calculate-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.6s ease;
-        }
-        .add-btn:hover::before, .calculate-btn:hover::before {
-            left: 100%;
-        }
-        .add-btn {
-            background: #2ecc71;
-            flex: 1;
-        }
-        .calculate-btn {
-            flex: 3;
-        }
-        .add-btn:hover, .calculate-btn:hover, .dimension-group button:hover {
-            opacity: 0.9;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        }
-        .add-btn:active, .calculate-btn:active,
-        .dimension-group button:active {
-            transform: translateY(1px);
-        }
-        .empty-tip {
-            font-size: 0.95rem;
-            margin: 0.8rem 0;
-            padding: 1.2rem;
-            border-radius: 8px;
-            border: 1px dashed;
-            text-align: center;
-        }
-        .dimension-label {
-            font-size: 0.95rem;
-            margin-top: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-        .dimension-label span:nth-child(2) {
-            font-weight: 500;
-        }
-        .option-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin: 1rem 0;
-        }
-        .option-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.7rem 1.2rem;
-            border: 1px solid;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .option-group label::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.6s ease;
-        }
-        .option-group label:hover::before {
-            left: 100%;
-        }
-        .option-group input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .option-group input[type="radio"]:checked + span {
-            font-weight: bold;
-        }
-        .option-group input[type="radio"]:checked + span::before {
-            content: "✓";
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            margin-right: 6px;
-            font-weight: bold;
-        }
-        .option-group label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        button {
-            color: white;
-            border: none;
-            padding: 0.8rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s, transform 0.1s, box-shadow 0.2s;
-            font-weight: 500;
-        }
-        .result {
-            font-weight: bold;
-            transition: background 0.3s;
-            position: relative;
-        }
-        .result::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-        }
-        .result:hover {
-            background-color: inherit;
-        }
-        .hidden {
-            display: none;
-        }
-        .error-hint {
-            color: #e74c3c;
-            font-size: 0.95rem;
-            margin: 0.5rem 0 1rem;
-            height: 1.2rem;
-            padding: 0 0.2rem;
-        }
-        .input-hint {
-            font-size: 0.85rem;
-            margin-top: 0.3rem;
-            text-align: center;
-            opacity: 0.9;
-        }
-        .calculator-footer {
-            margin-top: 2.5rem;
-            padding-top: 1.2rem;
-            border-top: 1px dashed;
-            text-align: center;
-            font-size: 0.95rem;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; }
-            100% { opacity: 0.7; }
-        }
-        
-        .calculating {
-            animation: pulse 1.5s infinite;
-        }
-        
-        @media (max-width: 768px) {
-            .calculator {
-                padding: 1.5rem;
-            }
-            
-            th, td {
-                padding: 0.7rem 0.6rem;
-                font-size: 0.95rem;
-            }
-            
-            .section-title {
-                margin: 1.8rem 0 1rem;
-                font-size: 1.15rem;
-            }
-            
-            .dimension-group {
-                gap: 0.8rem;
-                padding: 0.8rem;
-            }
-            
-            .option-group {
-                gap: 0.7rem;
-            }
-            
-            .option-group label {
-                padding: 0.6rem 0.9rem;
-                font-size: 0.95rem;
-            }
-            
-            body {
-                padding: 1.2rem 0.8rem;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-                margin: 0 0 1.8rem;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .add-btn, .calculate-btn {
-                flex: none;
-                width: 100%;
-            }
-            
-            .theme-toggle {
-                top: 1rem;
-                right: 1rem;
-                font-size: 0.8rem;
-                padding: 0.4rem 0.6rem;
-            }
-        }
-        
-        @media (max-width: 768px) and (orientation: portrait) {
-            .quantity-input,
-            .dim-length,
-            .dim-width,
-            .dim-height {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            
-            .quantity-input input,
-            .dim-length input,
-            .dim-width input,
-            .dim-height input {
-                width: 80px;
-            }
-            
-            .input-hint {
-                margin-top: 0;
-                text-align: left;
-            }
-        }
-        
-        @media (max-width: 768px) and (orientation: landscape) {
-            .quantity-input,
-            .dim-length,
-            .dim-width,
-            .dim-height {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.2rem;
-            }
-            
-            .input-hint {
-                margin-top: 0.2rem;
-                text-align: left;
-            }
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<title>货代成本计算器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;transition:all .3s}
+html{font-size:clamp(12px,3vw,16px)}
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;max-width:900px;margin:0 auto;padding:2rem 1.5rem;min-height:100vh;display:flex;flex-direction:column;position:relative;background:#f8f9fa;color:#2d3748}
+.theme-toggle{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;font-size:.9rem;cursor-pointer;padding:.5rem .8rem;border-radius:4px;color:#94a3b8}
+.theme-toggle:hover{background:rgba(0,0,0,.05)}
+h1{margin:0 0 2.5rem;padding-bottom:.8rem;font-size:2.2rem;color:#1e40af}
+.calculator{border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05);padding:2rem;margin-bottom:2rem;border:1px solid #f1f5f9;background:#fff}
+.section-title{font-weight:bold;margin:2rem 0 1.2rem;padding-top:1rem;font-size:1.25rem;display:flex;align-items:center;gap:.5rem;border-top:1px dashed #e2e8f0;color:#1e40af}
+.section-title:first-of-type{margin-top:0;padding-top:0;border-top:none}
+.section-title::before{content:"•";font-size:1.5rem}
+table{width:100%;border-collapse:collapse;margin:1.2rem 0}
+th,td{border:1px solid #e2e8f0;padding:.9rem;font-size:1rem}
+th{background:#f8fafc;color:#4a568;white-space:nowrap}
+input{padding:.6rem .4rem;border:1px solid #cbd5e0;border-radius:6px;width:100%}
+input:focus{border-color:#1e40af;box-shadow:0 0 0 3px rgba(30,64,175,.1);outline:none}
+.quantity-input input{width:50px}
+.dim-length input,.dim-width input,.dim-height input{width:80px}
+.volume-container{margin-top:1rem}
+.dimension-group{display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;padding:1rem;border-radius:8px;flex-wrap:wrap;border:1px solid #e2e8f0;background:#f8fafc}
+.dimension-group button{padding:.7rem .9rem;min-width:65px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer}
+.button-group{display:flex;gap:1rem;margin:1rem 0}
+.add-btn{background:#2ecc71}
+.calculate-btn{background:#1e40af}
+button{color:#fff;border:none;padding:.8rem;border-radius:6px;cursor:pointer;font-size:1rem;font-weight:500}
+.empty-tip{font-size:.95rem;margin:.8rem 0;padding:1.2rem;border-radius:8px;border:1px dashed #e2e8f0;text-align:center;color:#64748b;background:#f8fafc}
+.input-hint{font-size:.85rem;margin-top:.3rem;text-align:center;opacity:.9;color:#64748b}
+.option-group{display:flex;flex-wrap:wrap;gap:1rem;margin:1rem 0}
+.option-group label{display:flex;align-items:center;gap:.5rem;padding:.7rem 1.2rem;border:1px solid #cbd5e0;border-radius:6px;cursor:pointer;background:#fff}
+.option-group input{position:absolute;opacity:0;width:0;height:0}
+.option-group input:checked+span{font-weight:bold;color:#1e40af}
+.result{font-weight:bold;background:#f0f7ff;color:#1e40af;position:relative}
+.result::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:#1e40af}
+.hidden{display:none}
+.error-hint{color:#e74c3c;font-size:.95rem;margin:.5rem 0 1rem;height:1.2rem}
+.calculator-footer{margin-top:2.5rem;padding-top:1.2rem;border-top:1px dashed #e2e8f0;text-align:center;font-size:.95rem;color:#64748b}
 
-        /* 浅色模式 */
-        body {
-            color: #2d3748;
-            background-color: #f8f9fa;
-            background-image: radial-gradient(#e0e7ff 0.5px, transparent 0.5px);
-            background-size: 10px 10px;
-        }
-        h1 {
-            color: #1e40af;
-        }
-        .calculator {
-            background: white;
-            border-color: #f1f5f9;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-        .section-title {
-            color: #1e40af;
-            border-top-color: #e2e8f0;
-        }
-        .section-title::before {
-            color: #1e40af;
-        }
-        th, td {
-            border-color: #e2e8f0;
-        }
-        th {
-            background: #f8fafc;
-            color: #4a5568;
-        }
-        tr:hover td {
-            background-color: #fefeff;
-        }
-        input {
-            border-color: #cbd5e0;
-            background-color: #ffffff;
-            color: #2d3748;
-        }
-        input:focus {
-            border-color: #1e40af;
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
-        }
-        .dimension-group {
-            background: #f8fafc;
-            border-color: #e2e8f0;
-        }
-        .dimension-group:hover {
-            background-color: #f0f7ff;
-            border-color: #bfdbfe;
-        }
-        .dimension-group button {
-            background: #e74c3c;
-        }
-        .dimension-group button:hover {
-            background: #c0392b;
-        }
-        .calculate-btn {
-            background: #1e40af;
-        }
-        .empty-tip {
-            color: #64748b;
-            background: #f8fafc;
-            border-color: #e2e8f0;
-        }
-        .dimension-label {
-            color: #64748b;
-        }
-        .dimension-label span:nth-child(2) {
-            color: #1e40af;
-        }
-        .option-group label {
-            border-color: #cbd5e0;
-            background-color: #ffffff;
-            color: #2d3748;
-        }
-        .option-group label:hover {
-            background-color: #1e40af;
-            color: white;
-            border-color: #1e40af;
-        }
-        .option-group input[type="radio"]:checked + span {
-            color: #1e40af;
-        }
-        .option-group input[type="radio"]:checked + span::before {
-            color: #1e40af;
-        }
-        .option-group label:hover input[type="radio"]:checked + span {
-            color: white;
-        }
-        .option-group label:hover input[type="radio"]:checked + span::before {
-            color: white;
-        }
-        .result {
-            color: #1e40af;
-            background: #f0f7ff;
-        }
-        .result::after {
-            background-color: #1e40af;
-        }
-        .result:hover {
-            background: #e6f2ff;
-        }
-        .input-hint {
-            color: #64748b;
-        }
-        .calculator-footer {
-            border-top-color: #e2e8f0;
-            color: #64748b;
-        }
-        .theme-toggle {
-            color: #94a3b8;
-        }
+body.dark-mode{background:#141414;color:#fff}
+body.dark-mode h1{color:#e50914}
+body.dark-mode .calculator{background:#1f1f1f;border-color:#333}
+body.dark-mode .section-title{color:#e50914;border-top-color:#333}
+body.dark-mode th,body.dark-mode td{border-color:#333}
+body.dark-mode th{background:#2d2d2d;color:#bbb}
+body.dark-mode input{background:#333;border-color:#444;color:#fff}
+body.dark-mode .dimension-group{background:#2d2d2d;border-color:#444}
+body.dark-mode .empty-tip{background:#2d2d2d;border-color:#444;color:#999}
+body.dark-mode .option-group label{background:#2d2d2d;border-color:#444;color:#fff}
+body.dark-mode .option-group input:checked+span{color:#e50914 !important}
+body.dark-mode .result{background:#282828;color:#e50914}
+body.dark-mode .result::after{background:#e50914}
 
-        /* 暗黑模式 */
-        body.dark-mode {
-            color: #ffffff;
-            background-color: #141414;
-            background-image: radial-gradient(rgba(229, 9, 20, 0.1) 0.5px, transparent 0.5px);
-            background-size: 10px 10px;
-        }
-        body.dark-mode h1 {
-            color: #e50914;
-        }
-        body.dark-mode .calculator {
-            background: #1f1f1f;
-            border-color: #333333;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        body.dark-mode .section-title {
-            color: #e50914;
-            border-top-color: #333333;
-        }
-        body.dark-mode .section-title::before {
-            color: #e50914;
-        }
-        body.dark-mode th, body.dark-mode td {
-            border-color: #333333;
-        }
-        body.dark-mode th {
-            background: #2d2d2d;
-            color: #bbbbbb;
-        }
-        body.dark-mode tr:hover td {
-            background-color: #282828;
-        }
-        body.dark-mode input {
-            border-color: #444444;
-            background-color: #333333;
-            color: #ffffff;
-        }
-        body.dark-mode input:focus {
-            border-color: #e50914;
-            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
-        }
-        body.dark-mode .dimension-group {
-            background: #2d2d2d;
-            border-color: #444444;
-        }
-        body.dark-mode .dimension-group:hover {
-            background-color: #333333;
-            border-color: #555555;
-        }
-        body.dark-mode .dimension-group button {
-            background: #e50914;
-        }
-        body.dark-mode .dimension-group button:hover {
-            background: #b81d24;
-        }
-        body.dark-mode .calculate-btn {
-            background: #e50914;
-        }
-        body.dark-mode .empty-tip {
-            color: #999999;
-            background: #2d2d2d;
-            border-color: #444444;
-        }
-        body.dark-mode .dimension-label {
-            color: #999999;
-        }
-        body.dark-mode .dimension-label span:nth-child(2) {
-            color: #e50914;
-        }
-        body.dark-mode .option-group label {
-            border-color: #444444;
-            background-color: #2d2d2d;
-            color: #ffffff;
-        }
-        body.dark-mode .option-group label:hover {
-            background-color: #e50914;
-            color: white;
-            border-color: #e50914;
-        }
-        body.dark-mode .option-group input[type="radio"]:checked + span {
-            color: #e50914;
-        }
-        body.dark-mode .option-group input[type="radio"]:checked + span::before {
-            color: #e50914;
-        }
-        body.dark-mode .option-group label:hover input[type="radio"]:checked + span {
-            color: white;
-        }
-        body.dark-mode .option-group label:hover input[type="radio"]:checked + span::before {
-            color: white;
-        }
-        body.dark-mode .result {
-            color: #e50914;
-            background: #282828;
-        }
-        body.dark-mode .result::after {
-            background-color: #e50914;
-        }
-        body.dark-mode .result:hover {
-            background: #333333;
-        }
-        body.dark-mode .input-hint {
-            color: #999999;
-        }
-        body.dark-mode .calculator-footer {
-            border-top-color: #444444;
-            color: #999999;
-        }
-        body.dark-mode .theme-toggle {
-            color: #999999;
-        }
-    </style>
+@media(max-width:768px){.calculator{padding:1.5rem}.button-group{flex-direction:column}.add-btn,.calculate-btn{width:100%}}
+</style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle" aria-label="切换主题">切换主题</button>
-    
-    <h1>空运海运快件综合成本计算器</h1>
-    <div class="calculator">
-        <div class="section-title">基础参数</div>
-        <div class="error-hint" id="baseError"></div>
-        <table>
-            <tr>
-                <td>总体积(m³)</td>
-                <td>
-                    <input type="number" id="totalVolume" step="0.0001" placeholder="直接输入总体积" min="0">
-                    <div class="dimension-label">
-                        <span>或输入件数及尺寸</span>
-                    </div>
-                    <div class="volume-container" id="dimensionContainer">
-                        <div class="empty-tip" id="emptyTip">点击添加,填写货物规格</div>
-                    </div>
-                    <div class="button-group">
-                        <button type="button" class="add-btn" onclick="addNewDimensionGroup()">添加</button>
-                        <button type="button" class="calculate-btn" onclick="calculateTotalVolume()">计算总体积</button>
-                    </div>
-                </td>
-                <td>C.W.(计费重量,kg)</td>
-                <td class="result" id="cw">-</td>
-            </tr>
-            <tr>
-                <td>G.W.(总实际重量,kg)</td>
-                <td><input type="number" id="gw" step="0.001" placeholder="输入所有货物总实际重量" min="0" required></td>
-                <td>重量/体积比(kg/m³)</td>
-                <td class="result" id="ratio">-</td>
-            </tr>
-            <tr>
-                <td>USD/RMB汇率</td>
-                <td><input type="number" id="exchangeRate" step="0.0001" value="7.2" min="0.0001" required></td>
-                <td>成本计费重(kg)</td>
-                <td class="result" id="costWeight">-</td>
-            </tr>
-        </table>
+<button class="theme-toggle" id="themeToggle">切换主题</button>
+<h1>货代成本计算器</h1>
+<div class="calculator">
+<div class="section-title">基础参数</div>
+<div class="error-hint" id="baseError"></div>
+<table>
+<tr>
+<td>总体积(m³)</td>
+<td>
+<input type="number" id="totalVolume" step="0.0001" placeholder="直接输入总体积" min="0">
+<div class="dimension-label"><span>或输入件数及尺寸</span></div>
+<div class="volume-container" id="dimensionContainer"><div class="empty-tip" id="emptyTip">点击添加,填写货物规格</div></div>
+<div class="button-group">
+<button class="add-btn" onclick="addNewDimensionGroup()">添加</button>
+<button class="calculate-btn" onclick="calculateTotalVolume()">计算总体积</button>
+</div>
+</td>
+<td>C.W.(计费重量,kg)</td>
+<td class="result" id="cw">-</td>
+</tr>
+<tr>
+<td>G.W.(总实际重量,kg)</td>
+<td><input type="number" id="gw" step="0.001" placeholder="输入总实际重量" min="0"></td>
+<td>重量/体积比(kg/m³)</td>
+<td class="result" id="ratio">-</td>
+</tr>
+<tr>
+<td>USD/RMB汇率</td>
+<td><input type="number" id="exchangeRate" step="0.0001" value="7.2" min="0.0001"></td>
+<td>成本计费重(kg)</td>
+<td class="result" id="costWeight">-</td>
+</tr>
+</table>
 
-        <div class="section-title">运输类型(体积重除数)</div>
-        <div class="option-group">
-            <label><input type="radio" name="billingType" value="0.006" checked><span>大陆</span></label>
-            <label><input type="radio" name="billingType" value="0.007"><span>香港</span></label>
-            <label><input type="radio" name="billingType" value="0.005"><span>快件</span></label>
-            <label><input type="radio" name="billingType" value="0.001"><span>海运</span></label>
-        </div>
+<div class="section-title">运输类型</div>
+<div class="option-group">
+<label><input type="radio" name="billingType" value="0.006" checked><span>大陆</span></label>
+<label><input type="radio" name="billingType" value="0.007"><span>香港</span></label>
+<label><input type="radio" name="billingType" value="0.005"><span>快件</span></label>
+<label><input type="radio" name="billingType" value="0.001"><span>海运</span></label>
+</div>
 
-        <div class="section-title">分泡比例</div>
-        <!-- 空运通用分泡 -->
-        <div class="option-group" id="airBubble">
-            <label><input type="radio" name="bubble" value="0" checked><span>不分泡</span></label>
-            <label><input type="radio" name="bubble" value="0.5"><span>55分</span></label>
-            <label><input type="radio" name="bubble" value="0.4"><span>46分</span></label>
-            <label><input type="radio" name="bubble" value="0.3"><span>37分</span></label>
-            <label><input type="radio" name="bubble" value="0.2"><span>28分</span></label>
-        </div>
-        <!-- 快件/海运默认不分泡 可自行扩展 -->
-        <div class="option-group hidden" id="otherBubble">
-            <label><input type="radio" name="bubbleOther" value="0" checked><span>默认不分泡</span></label>
-        </div>
+<div class="section-title">分泡比例</div>
+<div class="option-group" id="airBubble">
+<label><input type="radio" name="bubble" value="0" checked><span>不分泡</span></label>
+<label><input type="radio" name="bubble" value="0.5"><span>55分</span></label>
+<label><input type="radio" name="bubble" value="0.4"><span>46分</span></label>
+<label><input type="radio" name="bubble" value="0.3"><span>37分</span></label>
+<label><input type="radio" name="bubble" value="0.2"><span>28分</span></label>
+</div>
+<div class="option-group hidden" id="otherBubble">
+<label><input type="radio" name="bubbleOther" value="0" checked><span>默认不分泡</span></label>
+</div>
 
-        <div class="section-title">成本计算</div>
-        <table>
-            <tr>
-                <td>成本单价 RMB/KG</td>
-                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价或通过目标价反算" min="0"></td>
-                <td>分泡后 RMB/KG</td>
-                <td class="result" id="rmbAfter">-</td>
-            </tr>
-            <tr>
-                <td>成本单价 USD/KG</td>
-                <td class="result" id="usdPerKg">-</td>
-                <td>分泡后 USD/KG</td>
-                <td class="result" id="usdAfter">-</td>
-            </tr>
-            <tr>
-                <td>目标售价 USD/KG</td>
-                <td><input type="number" id="targetUsdPrice" step="0.01" placeholder="输入空运目标价USD单价" min="0"></td>
-                <td>对应成本 RMB/KG</td>
-                <td class="result" id="targetRmbPrice">-</td>
-            </tr>
-        </table>
+<div class="section-title">成本计算</div>
+<table>
+<tr>
+<td>成本单价 RMB/KG</td>
+<td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价或目标价反算" min="0"></td>
+<td>分泡后 RMB/KG</td>
+<td class="result" id="rmbAfter">-</td>
+</tr>
+<tr>
+<td>成本单价 USD/KG</td>
+<td class="result" id="usdPerKg">-</td>
+<td>分泡后 USD/KG</td>
+<td class="result" id="usdAfter">-</td>
+</tr>
+<tr>
+<td>目标售价 USD/KG</td>
+<td><input type="number" id="targetUsdPrice" step="0.01" min="0"></td>
+<td>对应成本 RMB/KG</td>
+<td class="result" id="targetRmbPrice">-</td>
+</tr>
+</table>
 
-        <div class="section-title">总成本汇总</div>
-        <table class="total-cost-table">
-            <tr>
-                <td></td>
-                <td></td>
-                <td>总成本 RMB</td>
-                <td class="result" id="totalRMB">-</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td>总成本 USD</td>
-                <td class="result" id="totalUSD">-</td>
-            </tr>
-        </table>
+<div class="section-title">总成本汇总</div>
+<table class="total-cost-table">
+<tr><td></td><td></td><td>总成本 RMB</td><td class="result" id="totalRMB">-</td></tr>
+<tr><td></td><td></td><td>总成本 USD</td><td class="result" id="totalUSD">-</td></tr>
+</table>
+<div class="calculator-footer">输入参数自动计算，空运/快件/海运一键切换</div>
+</div>
 
-        <div class="calculator-footer">输入参数自动计算，大陆/香港空运/快件/海运体积重一键切换</div>
-    </div>
+<script>
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
 
-    <script>
-        function setupThemeToggle() {
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-            
-            const savedTheme = localStorage.getItem('preferred-theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-                body.classList.add('dark-mode');
-            }
-            
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                localStorage.setItem('preferred-theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
-                themeToggle.classList.add('calculating');
-                setTimeout(() => themeToggle.classList.remove('calculating'), 300);
-            });
-        }
-        
-        window.onload = () => {
-            setupThemeToggle();
-            initEventListeners();
-        };
+function setupThemeToggle() {
+  const toggle = $('themeToggle');
+  toggle.onclick = () => {
+    document.body.classList.toggle('dark-mode');
+  };
+}
 
-        function initEventListeners() {
-            // 运输类型切换监听
-            document.querySelectorAll('input[name="billingType"]').forEach(radio => {
-                radio.addEventListener('change', function(){
-                    const val = parseFloat(this.value);
-                    // 海运/快件隐藏分泡，空运显示
-                    if(val === 0.005 || val === 0.001){
-                        document.getElementById('airBubble').classList.add('hidden');
-                        document.getElementById('otherBubble').classList.remove('hidden');
-                    }else{
-                        document.getElementById('airBubble').classList.remove('hidden');
-                        document.getElementById('otherBubble').classList.add('hidden');
-                    }
-                    refreshCalc();
-                })
-            })
+function initEventListeners() {
+  $$('input[name="billingType"]').forEach(radio => radio.addEventListener('change', () => {
+    const v = +document.querySelector('input[name="billingType"]:checked').value;
+    $('airBubble').classList.toggle('hidden', v === 0.005 || v === 0.001);
+    $('otherBubble').classList.toggle('hidden', !(v === 0.005 || v === 0.001));
+    refreshCalc();
+  }));
 
-            document.querySelectorAll('input').forEach(el => {
-                const handleInput = debounce(() => {
-                    refreshCalc();
-                }, 300);
-                
-                if (el.type !== 'radio') {
-                    el.addEventListener('input', handleInput);
-                    el.addEventListener('blur', handleInput);
-                } else {
-                    el.addEventListener('change', handleInput);
-                }
-            });
-        }
+  $$('input').forEach(el => {
+    const handler = debounce(refreshCalc, 300);
+    el.addEventListener(el.type !== 'radio' ? 'input' : 'change', handler);
+  });
+}
 
-        function refreshCalc(){
-            const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-            if (rmbPerKg) {
-                areAllFieldsFilled() && calc();
-            } else {
-                canReverseCalculate() && reverseCalc();
-            }
-        }
+function refreshCalc() {
+  $('rmbPerKg').value ? areAllFieldsFilled() && calc() : canReverseCalculate() && reverseCalc();
+}
 
-        function getBubbleRate(){
-            const typeVal = parseFloat(document.querySelector('input[name="billingType"]:checked').value);
-            if(typeVal === 0.005 || typeVal === 0.001){
-                return parseFloat(document.querySelector('input[name="bubbleOther"]:checked').value) || 0;
-            }else{
-                return parseFloat(document.querySelector('input[name="bubble"]:checked').value) || 0;
-            }
-        }
+function getBubbleRate() {
+  const v = +document.querySelector('input[name="billingType"]:checked').value;
+  return v === 0.005 || v === 0.001 ? 0 : +document.querySelector('input[name="bubble"]:checked').value || 0;
+}
 
-        function canReverseCalculate() {
-            const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
-            const gw = parseFloat(document.getElementById('gw').value) || 0;
-            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
-            const targetUsd = parseFloat(document.getElementById('targetUsdPrice').value) || 0;
-            return totalVolume > 0 && gw > 0 && rate > 0 && targetUsd > 0;
-        }
+function canReverseCalculate() {
+  const vol = +$('totalVolume').value, gw = +$('gw').value, rate = +$('exchangeRate').value, target = +$('targetUsdPrice').value;
+  return vol > 0 && gw > 0 && rate > 0 && target > 0;
+}
 
-        function reverseCalc() {
-            try {
-                const resultElements = document.querySelectorAll('.result');
-                resultElements.forEach(el => el.classList.add('calculating'));
+function reverseCalc() {
+  const vol = +$('totalVolume').value, gw = +$('gw').value, rate = +$('exchangeRate').value, target = +$('targetUsdPrice').value;
+  const div = +document.querySelector('input[name="billingType"]:checked').value;
+  const bubble = getBubbleRate();
+  const cw = vol / div, costW = gw + (cw - gw) * bubble;
+  const rmb = (target * cw * rate) / costW;
 
-                setTimeout(() => {
-                    const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
-                    const gw = parseFloat(document.getElementById('gw').value) || 0;
-                    const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
-                    const targetUsd = parseFloat(document.getElementById('targetUsdPrice').value) || 0;
-                    const errorHint = document.getElementById('baseError');
+  $('cw').textContent = cw.toFixed(2);
+  $('ratio').textContent = (gw / vol).toFixed(4);
+  $('costWeight').textContent = costW.toFixed(2);
+  $('targetRmbPrice').textContent = rmb.toFixed(2);
+  $('usdPerKg').textContent = (rmb / rate).toFixed(4);
+  $('rmbAfter').textContent = ((costW * rmb) / cw).toFixed(4);
+  $('usdAfter').textContent = target.toFixed(4);
+  $('totalRMB').textContent = (costW * rmb).toFixed(2);
+  $('totalUSD').textContent = (costW * rmb / rate).toFixed(2);
+}
 
-                    if (totalVolume <= 0 || gw <= 0 || rate <= 0 || targetUsd <= 0) {
-                        errorHint.textContent = "提示:请填写基础参数及目标USD单价";
-                        resultElements.forEach(el => el.classList.remove('calculating'));
-                        return;
-                    }
-                    errorHint.textContent = "";
+function calc() {
+  const vol = +$('totalVolume').value, gw = +$('gw').value, rate = +$('exchangeRate').value, rmb = +$('rmbPerKg').value;
+  const div = +document.querySelector('input[name="billingType"]:checked').value;
+  const bubble = getBubbleRate();
+  const cw = vol / div, costW = gw + (cw - gw) * bubble;
+  const usdP = (rmb / rate).toFixed(4);
 
-                    const billing = +document.querySelector('input[name="billingType"]:checked').value;
-                    const bubble = getBubbleRate();
+  $('cw').textContent = cw.toFixed(2);
+  $('ratio').textContent = (gw / vol).toFixed(4);
+  $('costWeight').textContent = costW.toFixed(2);
+  $('usdPerKg').textContent = usdP;
+  $('totalRMB').textContent = (costW * rmb).toFixed(2);
+  $('totalUSD').textContent = (costW * usdP).toFixed(2);
+  $('rmbAfter').textContent = ((costW * rmb) / cw).toFixed(4);
+  $('usdAfter').textContent = ((costW * usdP) / cw).toFixed(4);
+}
 
-                    const cw = totalVolume / billing;
-                    const costWeight = gw + (cw - gw) * bubble;
-                    const rmbPerKg = (targetUsd * cw * rate) / costWeight;
+function addNewDimensionGroup() {
+  const container = $('dimensionContainer');
+  if ($('emptyTip')) $('emptyTip').remove();
+  const div = document.createElement('div');
+  div.className = 'dimension-group';
+  div.innerHTML = `
+    <div class="quantity-input"><input type="number" class="dim-quantity" placeholder="件数" min="1" value="1"><div class="input-hint">件数</div></div>
+    <div class="dim-length"><input type="number" placeholder="长"><div class="input-hint">长(cm)</div></div>
+    <div class="dim-width"><input type="number" placeholder="宽"><div class="input-hint">宽(cm)</div></div>
+    <div class="dim-height"><input type="number" placeholder="高"><div class="input-hint">高(cm)</div></div>
+    <button onclick="delDim(this)">删除</button>`;
+  container.appendChild(div);
+}
 
-                    document.getElementById('cw').textContent = cw.toFixed(2);
-                    document.getElementById('ratio').textContent = (gw / totalVolume).toFixed(4);
-                    document.getElementById('costWeight').textContent = costWeight.toFixed(2);
-                    document.getElementById('targetRmbPrice').textContent = rmbPerKg.toFixed(2);
-                    document.getElementById('usdPerKg').textContent = (rmbPerKg / rate).toFixed(4);
-                    document.getElementById('rmbAfter').textContent = ((costWeight * rmbPerKg) / cw).toFixed(4);
-                    document.getElementById('usdAfter').textContent = targetUsd.toFixed(4);
-                    document.getElementById('totalRMB').textContent = (costWeight * rmbPerKg).toFixed(2);
-                    document.getElementById('totalUSD').textContent = (costWeight * (rmbPerKg / rate)).toFixed(2);
+function delDim(btn) {
+  btn.parentElement.remove();
+  if (!$('dimensionContainer').children.length) {
+    const tip = document.createElement('div');
+    tip.className = 'empty-tip';
+    tip.id = 'emptyTip';
+    tip.textContent = '点击"添加"按钮,开始填写货物规格';
+    $('dimensionContainer').appendChild(tip);
+  }
+  refreshCalc();
+}
 
-                    resultElements.forEach(el => el.classList.remove('calculating'));
-                }, 300);
-            } catch (e) {
-                document.getElementById('baseError').textContent = "计算错误:" + e.message;
-                document.querySelectorAll('.result').forEach(el => el.classList.remove('calculating'));
-            }
-        }
+function calculateTotalVolume() {
+  let vol = 0;
+  $$('.dimension-group').forEach(g => {
+    const q = +g.querySelector('.dim-quantity').value || 0;
+    const l = +g.querySelector('.dim-length input').value || 0;
+    const w = +g.querySelector('.dim-width input').value || 0;
+    const h = +g.querySelector('.dim-height input').value || 0;
+    vol += (l * w * h / 1000000) * q;
+  });
+  $('totalVolume').value = vol.toFixed(4);
+  refreshCalc();
+}
 
-        function calc() {
-            try {
-                const resultElements = document.querySelectorAll('.result');
-                resultElements.forEach(el => el.classList.add('calculating'));
+function areAllFieldsFilled() {
+  return +$('totalVolume').value > 0 && +$('gw').value > 0 && +$('exchangeRate').value > 0 && +$('rmbPerKg').value > 0;
+}
 
-                setTimeout(() => {
-                    const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
-                    const gw = parseFloat(document.getElementById('gw').value) || 0;
-                    const rate = parseFloat(document.getElementById('exchangeRate').value) || 7.2;
-                    const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
-                    const errorHint = document.getElementById('baseError');
+function debounce(func, delay) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => func.apply(this, args), delay); };
+}
 
-                    if (totalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
-                        errorHint.textContent = "提示:总体积/实重/汇率/单价必须大于0";
-                        resultElements.forEach(el => el.classList.remove('calculating'));
-                        return;
-                    }
-                    errorHint.textContent = "";
-
-                    const billing = +document.querySelector('input[name="billingType"]:checked').value;
-                    const bubble = getBubbleRate();
-
-                    const cw = totalVolume / billing;
-                    const costWeight = gw + (cw - gw) * bubble;
-                    const usdPerKg = (rmbPerKg / rate).toFixed(4);
-                    const totalRMB = (costWeight * rmbPerKg).toFixed(2);
-
-                    document.getElementById('cw').textContent = cw.toFixed(2);
-                    document.getElementById('ratio').textContent = (gw / totalVolume).toFixed(4);
-                    document.getElementById('costWeight').textContent = costWeight.toFixed(2);
-                    document.getElementById('usdPerKg').textContent = usdPerKg;
-                    document.getElementById('totalRMB').textContent = totalRMB;
-                    document.getElementById('totalUSD').textContent = (costWeight * usdPerKg).toFixed(2);
-                    document.getElementById('rmbAfter').textContent = (totalRMB / cw).toFixed(4);
-                    document.getElementById('usdAfter').textContent = ((costWeight * usdPerKg) / cw).toFixed(4);
-
-                    resultElements.forEach(el => el.classList.remove('calculating'));
-                }, 300);
-            } catch (e) {
-                document.getElementById('baseError').textContent = "计算错误:" + e.message;
-                document.querySelectorAll('.result').forEach(el => el.classList.remove('calculating'));
-            }
-        }
-
-        function addNewDimensionGroup() {
-            const container = document.getElementById('dimensionContainer');
-            const emptyTip = document.getElementById('emptyTip');
-            const existingGroups = container.querySelectorAll('.dimension-group');
-            const newIndex = existingGroups.length + 1;
-
-            if (newIndex === 1 && emptyTip) emptyTip.remove();
-
-            const group = document.createElement('div');
-            group.className = 'dimension-group';
-            group.dataset.index = newIndex;
-            group.innerHTML = `
-                <div class="quantity-input">
-                    <input type="number" class="dim-quantity" placeholder="件数" min="1" value="1" max="9999">
-                    <div class="input-hint">件数</div>
-                </div>
-                <div class="dim-length">
-                    <input type="number" placeholder="长" min="0" max="999999">
-                    <div class="input-hint">长(cm)</div>
-                </div>
-                <div class="dim-width">
-                    <input type="number" placeholder="宽" min="0" max="999999">
-                    <div class="input-hint">宽(cm)</div>
-                </div>
-                <div class="dim-height">
-                    <input type="number" placeholder="高" min="0" max="999999">
-                    <div class="input-hint">高(cm)</div>
-                </div>
-                <button type="button" class="delete-dim" onclick="deleteDimensionGroup(${newIndex})">删除</button>
-            `;
-            
-            container.appendChild(group);
-
-            group.style.opacity = '0';
-            group.style.transform = 'translateY(10px)';
-            setTimeout(() => {
-                group.style.opacity = '1';
-                group.style.transform = 'translateY(0)';
-            }, 10);
-
-            group.querySelectorAll('input').forEach(el => {
-                const handleInput = debounce(() => refreshCalc(), 300);
-                if (el.type !== 'radio') {
-                    el.addEventListener('input', handleInput);
-                    el.addEventListener('blur', handleInput);
-                }
-            });
-        }
-
-        function deleteDimensionGroup(index) {
-            const container = document.getElementById('dimensionContainer');
-            const group = container.querySelector(`.dimension-group[data-index="${index}"]`);
-            if (!group) return;
-            
-            group.style.opacity = '0';
-            group.style.transform = 'translateY(10px)';
-            setTimeout(() => {
-                group.remove();
-                const remainingGroups = container.querySelectorAll('.dimension-group');
-                
-                remainingGroups.forEach((g, i) => {
-                    const newIndex = i + 1;
-                    g.dataset.index = newIndex;
-                    g.querySelector('.delete-dim').setAttribute('onclick', `deleteDimensionGroup(${newIndex})`);
-                });
-
-                if (remainingGroups.length === 0) {
-                    const emptyTip = document.createElement('div');
-                    emptyTip.className = 'empty-tip';
-                    emptyTip.id = 'emptyTip';
-                    emptyTip.textContent = '点击"添加"按钮,开始填写货物规格';
-                    container.appendChild(emptyTip);
-                }
-                refreshCalc();
-            }, 200);
-        }
-
-        function calculateTotalVolume() {
-            const calculateBtn = document.querySelector('.calculate-btn');
-            calculateBtn.classList.add('calculating');
-            
-            setTimeout(() => {
-                const container = document.getElementById('dimensionContainer');
-                const groups = container.querySelectorAll('.dimension-group');
-                const errorHint = document.getElementById('baseError');
-                let totalVolume = 0;
-
-                if (groups.length === 0) {
-                    errorHint.textContent = "提示:请先点击\"添加\"按钮,填写货物规格";
-                    calculateBtn.classList.remove('calculating');
-                    return;
-                }
-
-                for (let group of groups) {
-                    const length = parseFloat(group.querySelector('.dim-length input').value) || 0;
-                    const width = parseFloat(group.querySelector('.dim-width input').value) || 0;
-                    const height = parseFloat(group.querySelector('.dim-height input').value) || 0;
-                    const quantity = parseInt(group.querySelector('.dim-quantity').value) || 0;
-
-                    if (length <= 0 || width <= 0 || height <= 0) {
-                        errorHint.textContent = `提示:第${group.dataset.index}组长宽高必须为正数`;
-                        calculateBtn.classList.remove('calculating');
-                        return;
-                    }
-                    if (quantity <= 0) {
-                        errorHint.textContent = `提示:第${group.dataset.index}组数量必须为正数`;
-                        calculateBtn.classList.remove('calculating');
-                        return;
-                    }
-
-                    totalVolume += (length * width * height) / 1000000 * quantity;
-                }
-
-                if (totalVolume > 0) {
-                    document.getElementById('totalVolume').value = totalVolume.toFixed(4);
-                    errorHint.textContent = "";
-                    refreshCalc();
-                } else {
-                    errorHint.textContent = "提示:货物规格无效，请检查";
-                }
-                
-                calculateBtn.classList.remove('calculating');
-            }, 300);
-        }
-
-        function areAllFieldsFilled() {
-            const totalVolume = parseFloat(document.getElementById('totalVolume').value) || 0;
-            const gw = parseFloat(document.getElementById('gw').value) || 0;
-            const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
-            const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
-            return totalVolume > 0 && gw > 0 && rate > 0 && rmbPerKg > 0;
-        }
-
-        function debounce(func, delay) {
-            let timer;
-            return (...args) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-    </script>
+window.onload = () => { setupThemeToggle(); initEventListeners(); };
+</script>
 </body>
 </html>
