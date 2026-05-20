@@ -1,0 +1,9 @@
+name = "air-cargo-calculator"
+main = "worker.js"
+compatibility_date = "2025-05-20"
+
+[triggers]
+# 空即可，自动部署用
+
+[build]
+command = ""
