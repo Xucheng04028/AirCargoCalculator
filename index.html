@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>空运成本计算器</title>
+    <title>空运海运快件综合成本计算器</title>
     <style>
         * {
             box-sizing: border-box;
@@ -669,7 +669,7 @@
 <body>
     <button class="theme-toggle" id="themeToggle" aria-label="切换主题">切换主题</button>
     
-    <h1>空运成本计算器</h1>
+    <h1>空运海运快件综合成本计算器</h1>
     <div class="calculator">
         <div class="section-title">基础参数</div>
         <div class="error-hint" id="baseError"></div>
@@ -706,65 +706,67 @@
             </tr>
         </table>
 
-        <div class="section-title">计费标准</div>
+        <div class="section-title">运输类型(体积重除数)</div>
         <div class="option-group">
-            <label><input type="radio" name="billing" value="0.006" checked><span>大陆</span></label>
-            <label><input type="radio" name="billing" value="0.007"><span>香港</span></label>
+            <label><input type="radio" name="billingType" value="0.006" checked><span>大陆</span></label>
+            <label><input type="radio" name="billingType" value="0.007"><span>香港</span></label>
+            <label><input type="radio" name="billingType" value="0.005"><span>快件</span></label>
+            <label><input type="radio" name="billingType" value="0.001"><span>海运</span></label>
         </div>
 
         <div class="section-title">分泡比例</div>
-        <div class="option-group" id="mainlandBubble">
-            <label><input type="radio" name="bubble" value="0" checked><span>不分</span></label>
+        <!-- 空运通用分泡 -->
+        <div class="option-group" id="airBubble">
+            <label><input type="radio" name="bubble" value="0" checked><span>不分泡</span></label>
             <label><input type="radio" name="bubble" value="0.5"><span>55分</span></label>
             <label><input type="radio" name="bubble" value="0.4"><span>46分</span></label>
             <label><input type="radio" name="bubble" value="0.3"><span>37分</span></label>
             <label><input type="radio" name="bubble" value="0.2"><span>28分</span></label>
         </div>
-        <div class="option-group hidden" id="hongkongBubble">
-            <label><input type="radio" name="bubbleHk" value="0" checked><span>不分</span></label>
-            <label><input type="radio" name="bubbleHk" value="0.3333"><span>1/3</span></label>
-            <label><input type="radio" name="bubbleHk" value="0.6667"><span>2/3</span></label>
+        <!-- 快件/海运默认不分泡 可自行扩展 -->
+        <div class="option-group hidden" id="otherBubble">
+            <label><input type="radio" name="bubbleOther" value="0" checked><span>默认不分泡</span></label>
         </div>
 
         <div class="section-title">成本计算</div>
         <table>
             <tr>
-                <td>成本空运费RMB/KG</td>
-                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价或通过目标价计算" min="0"></td>
-                <td>分泡后RMB/KG</td>
+                <td>成本单价 RMB/KG</td>
+                <td><input type="number" id="rmbPerKg" step="0.01" placeholder="输入单价或通过目标价反算" min="0"></td>
+                <td>分泡后 RMB/KG</td>
                 <td class="result" id="rmbAfter">-</td>
             </tr>
             <tr>
-                <td>成本空运费USD/KG</td>
+                <td>成本单价 USD/KG</td>
                 <td class="result" id="usdPerKg">-</td>
-                <td>分泡后USD/KG</td>
+                <td>分泡后 USD/KG</td>
                 <td class="result" id="usdAfter">-</td>
             </tr>
             <tr>
-                <td>空运目标价USD/KG</td>
+                <td>目标售价 USD/KG</td>
                 <td><input type="number" id="targetUsdPrice" step="0.01" placeholder="输入空运目标价USD单价" min="0"></td>
-                <td>分泡后成本RMB/KG</td>
+                <td>对应成本 RMB/KG</td>
                 <td class="result" id="targetRmbPrice">-</td>
             </tr>
         </table>
 
-        <div class="section-title">总成本</div>
+        <div class="section-title">总成本汇总</div>
         <table class="total-cost-table">
             <tr>
                 <td></td>
                 <td></td>
-                <td>空运总成本RMB</td>
+                <td>总成本 RMB</td>
                 <td class="result" id="totalRMB">-</td>
             </tr>
             <tr>
                 <td></td>
                 <td></td>
-                <td>空运总成本USD</td>
+                <td>总成本 USD</td>
                 <td class="result" id="totalUSD">-</td>
             </tr>
         </table>
 
-        <div class="calculator-footer">输入相关参数后自动计算，结果仅供参考</div>
+        <div class="calculator-footer">输入参数自动计算，大陆/香港空运/快件/海运体积重一键切换</div>
     </div>
 
     <script>
@@ -793,14 +795,25 @@
         };
 
         function initEventListeners() {
+            // 运输类型切换监听
+            document.querySelectorAll('input[name="billingType"]').forEach(radio => {
+                radio.addEventListener('change', function(){
+                    const val = parseFloat(this.value);
+                    // 海运/快件隐藏分泡，空运显示
+                    if(val === 0.005 || val === 0.001){
+                        document.getElementById('airBubble').classList.add('hidden');
+                        document.getElementById('otherBubble').classList.remove('hidden');
+                    }else{
+                        document.getElementById('airBubble').classList.remove('hidden');
+                        document.getElementById('otherBubble').classList.add('hidden');
+                    }
+                    refreshCalc();
+                })
+            })
+
             document.querySelectorAll('input').forEach(el => {
                 const handleInput = debounce(() => {
-                    const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-                    if (rmbPerKg) {
-                        areAllFieldsFilled() && calc();
-                    } else {
-                        canReverseCalculate() && reverseCalc();
-                    }
+                    refreshCalc();
                 }, 300);
                 
                 if (el.type !== 'radio') {
@@ -810,38 +823,24 @@
                     el.addEventListener('change', handleInput);
                 }
             });
+        }
 
-            document.getElementById('targetUsdPrice').addEventListener('input', debounce(() => {
-                const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-                if (!rmbPerKg) {
-                    canReverseCalculate() && reverseCalc();
-                }
-            }, 300));
+        function refreshCalc(){
+            const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
+            if (rmbPerKg) {
+                areAllFieldsFilled() && calc();
+            } else {
+                canReverseCalculate() && reverseCalc();
+            }
+        }
 
-            document.getElementById('rmbPerKg').addEventListener('input', debounce(() => {
-                const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-                if (rmbPerKg) {
-                    areAllFieldsFilled() && calc();
-                    document.getElementById('targetRmbPrice').textContent = '-';
-                } else {
-                    canReverseCalculate() && reverseCalc();
-                }
-            }, 300));
-
-            document.querySelectorAll('input[name="billing"]').forEach(radio => {
-                radio.addEventListener('change', () => {
-                    const isMainland = radio.value === "0.006";
-                    document.getElementById('mainlandBubble').classList.toggle('hidden', !isMainland);
-                    document.getElementById('hongkongBubble').classList.toggle('hidden', isMainland);
-                    
-                    const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-                    if (rmbPerKg) {
-                        areAllFieldsFilled() && calc();
-                    } else {
-                        canReverseCalculate() && reverseCalc();
-                    }
-                });
-            });
+        function getBubbleRate(){
+            const typeVal = parseFloat(document.querySelector('input[name="billingType"]:checked').value);
+            if(typeVal === 0.005 || typeVal === 0.001){
+                return parseFloat(document.querySelector('input[name="bubbleOther"]:checked').value) || 0;
+            }else{
+                return parseFloat(document.querySelector('input[name="bubble"]:checked').value) || 0;
+            }
         }
 
         function canReverseCalculate() {
@@ -849,7 +848,6 @@
             const gw = parseFloat(document.getElementById('gw').value) || 0;
             const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
             const targetUsd = parseFloat(document.getElementById('targetUsdPrice').value) || 0;
-
             return totalVolume > 0 && gw > 0 && rate > 0 && targetUsd > 0;
         }
 
@@ -866,16 +864,14 @@
                     const errorHint = document.getElementById('baseError');
 
                     if (totalVolume <= 0 || gw <= 0 || rate <= 0 || targetUsd <= 0) {
-                        errorHint.textContent = "提示:请填写基础参数及空运目标价USD/KG";
+                        errorHint.textContent = "提示:请填写基础参数及目标USD单价";
                         resultElements.forEach(el => el.classList.remove('calculating'));
                         return;
                     }
                     errorHint.textContent = "";
 
-                    const billing = +document.querySelector('input[name="billing"]:checked').value;
-                    const bubble = billing === 0.006 
-                        ? +document.querySelector('input[name="bubble"]:checked').value 
-                        : +document.querySelector('input[name="bubbleHk"]:checked').value;
+                    const billing = +document.querySelector('input[name="billingType"]:checked').value;
+                    const bubble = getBubbleRate();
 
                     const cw = totalVolume / billing;
                     const costWeight = gw + (cw - gw) * bubble;
@@ -912,16 +908,14 @@
                     const errorHint = document.getElementById('baseError');
 
                     if (totalVolume <= 0 || gw <= 0 || rate <= 0 || rmbPerKg <= 0) {
-                        errorHint.textContent = "提示:请填写所有必填参数(总体积/总重量/汇率/单价均需大于0)";
+                        errorHint.textContent = "提示:总体积/实重/汇率/单价必须大于0";
                         resultElements.forEach(el => el.classList.remove('calculating'));
                         return;
                     }
                     errorHint.textContent = "";
 
-                    const billing = +document.querySelector('input[name="billing"]:checked').value;
-                    const bubble = billing === 0.006 
-                        ? +document.querySelector('input[name="bubble"]:checked').value 
-                        : +document.querySelector('input[name="bubbleHk"]:checked').value;
+                    const billing = +document.querySelector('input[name="billingType"]:checked').value;
+                    const bubble = getBubbleRate();
 
                     const cw = totalVolume / billing;
                     const costWeight = gw + (cw - gw) * bubble;
@@ -986,14 +980,7 @@
             }, 10);
 
             group.querySelectorAll('input').forEach(el => {
-                const handleInput = debounce(() => {
-                    const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-                    if (rmbPerKg) {
-                        areAllFieldsFilled() && calc();
-                    } else {
-                        canReverseCalculate() && reverseCalc();
-                    }
-                }, 300);
+                const handleInput = debounce(() => refreshCalc(), 300);
                 if (el.type !== 'radio') {
                     el.addEventListener('input', handleInput);
                     el.addEventListener('blur', handleInput);
@@ -1025,6 +1012,7 @@
                     emptyTip.textContent = '点击"添加"按钮,开始填写货物规格';
                     container.appendChild(emptyTip);
                 }
+                refreshCalc();
             }, 200);
         }
 
@@ -1051,12 +1039,12 @@
                     const quantity = parseInt(group.querySelector('.dim-quantity').value) || 0;
 
                     if (length <= 0 || width <= 0 || height <= 0) {
-                        errorHint.textContent = `提示:第${group.dataset.index}组的长宽高必须为正数`;
+                        errorHint.textContent = `提示:第${group.dataset.index}组长宽高必须为正数`;
                         calculateBtn.classList.remove('calculating');
                         return;
                     }
                     if (quantity <= 0) {
-                        errorHint.textContent = `提示:第${group.dataset.index}组的数量必须为正数`;
+                        errorHint.textContent = `提示:第${group.dataset.index}组数量必须为正数`;
                         calculateBtn.classList.remove('calculating');
                         return;
                     }
@@ -1067,15 +1055,9 @@
                 if (totalVolume > 0) {
                     document.getElementById('totalVolume').value = totalVolume.toFixed(4);
                     errorHint.textContent = "";
-                    
-                    const rmbPerKg = document.getElementById('rmbPerKg').value.trim();
-                    if (rmbPerKg) {
-                        areAllFieldsFilled() && calc();
-                    } else {
-                        canReverseCalculate() && reverseCalc();
-                    }
+                    refreshCalc();
                 } else {
-                    errorHint.textContent = "提示:所有货物规格均无效,请检查输入";
+                    errorHint.textContent = "提示:货物规格无效，请检查";
                 }
                 
                 calculateBtn.classList.remove('calculating');
@@ -1087,7 +1069,6 @@
             const gw = parseFloat(document.getElementById('gw').value) || 0;
             const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
             const rmbPerKg = parseFloat(document.getElementById('rmbPerKg').value) || 0;
-
             return totalVolume > 0 && gw > 0 && rate > 0 && rmbPerKg > 0;
         }
 
@@ -1101,4 +1082,3 @@
     </script>
 </body>
 </html>
-
